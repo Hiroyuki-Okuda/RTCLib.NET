@@ -5,97 +5,9 @@ using System.Text;
 using System.Net;
 
 using System.Runtime.InteropServices;
-using System.Threading.Tasks;
-using System.Net.Sockets;
 
 namespace RTCLib
 {
-    public class UdpByteSender : IDisposable
-    {
-        // Local port to open Udp
-        int localPort;
-
-        // Remote host information
-        string remoteHost;
-        int remotePort;
-
-        // udpClient client
-        System.Net.Sockets.UdpClient udpClient;
-
-        // send target
-        System.Net.IPEndPoint remoteEndPoint;
-
-        public UdpByteSender(int localPort, string remoteHost, int remotePort, UdpClient udpClient, IPEndPoint remoteEndPoint)
-        {
-            this.localPort = localPort;
-            this.remoteHost = remoteHost;
-            this.remotePort = remotePort;
-            this.udpClient = udpClient;
-            this.remoteEndPoint = remoteEndPoint;
-        }
-
-        public UdpByteSender()
-        {
-        }
-
-        // event executed on data send completed
-        public event Action SendCompleted;
-
-        /// <summary>
-        /// UDP通信を開く．送信する．
-        /// </summary>
-        /// <param name="_remoteHost">送信先IP</param>
-        /// <param name="_remotePort">送信先ポート</param>
-        /// <param name="_localPort">送信元ポート</param>
-        /// <returns></returns>
-        public int Open( string _remoteHost, int _remotePort, int _localPort ) {
-            remoteHost = _remoteHost;
-            localPort = _localPort;
-            remotePort = _remotePort;   
-
-            // UDPクライアントを作成
-            udpClient = new System.Net.Sockets.UdpClient(localPort);
-
-            // 送信先エンドポイント情報を作成
-            remoteEndPoint = new IPEndPoint(IPAddress.Parse(remoteHost), remotePort);
-
-            udpClient.Connect(remoteEndPoint);
-
-            return 0;
-        }
-
-        public int Send(byte[] _messageBytes)
-        {
-            var ret = udpClient.Send(_messageBytes, _messageBytes.Length);
-            OnSendCompleted();
-            return ret;
-        }
-
-        public async Task<int> SendAsync(byte[] _messageBytes)
-        {
-            var ret = await udpClient.SendAsync(_messageBytes, _messageBytes.Length);
-            OnSendCompleted();
-            return ret;
-        }
-        
-        ~UdpByteSender()
-        {
-            remoteEndPoint = null;
-            udpClient.Close();
-            udpClient = null;
-        }
-
-        protected virtual void OnSendCompleted()
-        {
-            SendCompleted?.Invoke();
-        }
-
-        public void Dispose()
-        {
-            throw new NotImplementedException();
-        }
-    }
-
     public class UdpByteReceiver
     {
         // Local port to receive
@@ -264,7 +176,7 @@ namespace RTCLib
         public int Open( string _remote_host, int _remote_port, int _local_port)
         {
             sender = new UdpByteSender();
-            int ret = sender.Open(_remote_host, _remote_port, _local_port);
+            int ret = sender.Open(_remote_host, _remote_port);
             return ret;
         }
 
