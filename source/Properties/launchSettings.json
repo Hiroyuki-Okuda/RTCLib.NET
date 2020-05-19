@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "RTCLib.NET": {
+      "commandName": "Project",
+      "workingDirectory": "../build"
+    }
+  }
+}
