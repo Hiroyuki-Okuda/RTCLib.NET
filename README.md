@@ -1,2 +1,2 @@
 # RTCLib.NET
-Small utilities for real-time vehicle control
+Simple utilities for real-time vehicle control
