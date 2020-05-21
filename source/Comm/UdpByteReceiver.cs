@@ -5,6 +5,9 @@ using System.Net;
 
 namespace RTCLib.Comm
 {
+    /// <summary>
+    /// Binary data receiver through Udp
+    /// </summary>
     public class UdpByteReceiver : IDisposable
     {
         // Local port to receive
@@ -26,7 +29,13 @@ namespace RTCLib.Comm
         // mutex for async receive
         private readonly System.Threading.Mutex _mutex = new System.Threading.Mutex();
 
+        /// <summary>
+        /// Handler on the data gram receive
+        /// </summary>
+        /// <param name="dataBytes"></param>
         public delegate void ReceivedBytesHandler(byte[] dataBytes);
+
+        //! Event on receiving binary data
         event ReceivedBytesHandler OnBytesReceived;
 
         /// <summary>
@@ -98,6 +107,9 @@ namespace RTCLib.Comm
             return 0;
         }
 
+        /// <summary>
+        /// Closing socket
+        /// </summary>
         public void Close()
         {
             _udpClient?.Close();
@@ -106,6 +118,9 @@ namespace RTCLib.Comm
         }
 
 
+        /// <summary>
+        /// Clear buffer
+        /// </summary>
         public void ClearBuffer() 
         {
             _mutex.WaitOne();
@@ -113,6 +128,10 @@ namespace RTCLib.Comm
             _mutex.ReleaseMutex();
         }
 
+        /// <summary>
+        /// Get all received data
+        /// </summary>
+        /// <returns></returns>
         public byte[] GetAllData()
         {
             _mutex.WaitOne();
@@ -141,6 +160,10 @@ namespace RTCLib.Comm
             return ret;
         }
 
+        /// <summary>
+        /// Get available data packets count
+        /// </summary>
+        /// <returns></returns>
         public int GetAvailableDataCount()
         {
             return _receivedPackets.Count;
@@ -196,6 +219,10 @@ namespace RTCLib.Comm
             // TODO release unmanaged resources here
         }
 
+        /// <summary>
+        /// Disposable pattern
+        /// </summary>
+        /// <param name="disposing"></param>
         protected virtual void Dispose(bool disposing)
         {
             ReleaseUnmanagedResources();
@@ -207,12 +234,16 @@ namespace RTCLib.Comm
             }
         }
 
+        /// <summary>
+        /// Disposable pattern
+        /// </summary>
         public void Dispose()
         {
             Dispose(true);
             GC.SuppressFinalize(this);
         }
 
+        /// <inheritdoc />
         ~UdpByteReceiver()
         {
             Dispose(false);

@@ -5,6 +5,9 @@ using System.Threading.Tasks;
 
 namespace RTCLib.Comm
 {
+    /// <summary>
+    /// Send binary data through UDP
+    /// </summary>
     public class UdpByteSender : IDisposable
     {
         // Local port to open Udp
@@ -21,12 +24,23 @@ namespace RTCLib.Comm
         System.Net.IPEndPoint _remoteEndPoint = null;
 
         // event executed on data send completed
+        /// <summary>
+        /// Callback action on completing data sending
+        /// </summary>
         public event Action SendCompleted;
 
+        /// <summary>
+        /// Constructor
+        /// </summary>
         public UdpByteSender()
         {
         }
 
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        /// <param name="remoteHost">Name or IP address of remote host to send</param>
+        /// <param name="remotePort">Port number to send</param>
         public UdpByteSender(string remoteHost, int remotePort)
         {
             _ = Open(remoteHost, remotePort);
@@ -66,12 +80,23 @@ namespace RTCLib.Comm
             _udpClient = null;
         }
 
+        /// <summary>
+        /// Send data packet synchronously 
+        /// </summary>
+        /// <param name="messageBytes"></param>
+        /// <returns></returns>
         public int Send(byte[] messageBytes)
         {
             var ret = Send(messageBytes, _remoteEndPoint);
             return ret;
         }
 
+        /// <summary>
+        /// Send data packet synchronously
+        /// </summary>
+        /// <param name="messageBytes"></param>
+        /// <param name="sendTo"></param>
+        /// <returns></returns>
         public int Send(byte[] messageBytes, IPEndPoint sendTo)
         {
             int ret = 0;
@@ -83,12 +108,24 @@ namespace RTCLib.Comm
             return ret;
         }
 
+        /// <summary>
+        /// Send data packet asynchronously
+        /// </summary>
+        /// <param name="messageBytes">Data to send</param>
+        /// <returns></returns>
         public async Task<int> SendAsync(byte[] messageBytes)
         {
             var ret = SendAsync(messageBytes, _remoteEndPoint);
             return await ret.ConfigureAwait(false);
         }
 
+        /// <summary>
+        /// Send data packet asynchronously
+        /// </summary>
+        /// <param name="messageBytes">Data to send</param>
+        /// <param name="sendTo">Remote host to send</param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException"></exception>
         public async Task<int> SendAsync(byte[] messageBytes, IPEndPoint sendTo)
         {
             Task<int> ret = null;
@@ -98,6 +135,9 @@ namespace RTCLib.Comm
             return await ret.ConfigureAwait(false);
         }
 
+        /// <summary>
+        /// Event invoker
+        /// </summary>
         protected virtual void OnSendCompleted()
         {
             SendCompleted?.Invoke();
@@ -109,6 +149,10 @@ namespace RTCLib.Comm
             // TODO release unmanaged resources here
         }
 
+        /// <summary>
+        /// Disposable pattern
+        /// </summary>
+        /// <param name="disposing">flag</param>
         protected virtual void Dispose(bool disposing)
         {
             ReleaseUnmanagedResources();
@@ -118,12 +162,16 @@ namespace RTCLib.Comm
             }
         }
 
+        /// <summary>
+        /// Disposable pattern
+        /// </summary>
         public void Dispose()
         {
             Dispose(true);
             GC.SuppressFinalize(this);
         }
 
+        /// <inheritdoc />
         ~UdpByteSender()
         {
             Dispose(false);

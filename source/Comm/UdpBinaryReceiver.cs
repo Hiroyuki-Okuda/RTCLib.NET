@@ -3,10 +3,17 @@ using System.Runtime.InteropServices;
 
 namespace RTCLib.Comm
 {
+    /// <summary>
+    /// Receive binary struct through UDP
+    /// </summary>
+    /// <typeparam name="T">Struct type to receive</typeparam>
     public class UdpBinaryReceiver<T> : System.IDisposable
     {
         UdpByteReceiver _receiver;
 
+        /// <summary>
+        /// Constructor
+        /// </summary>
         public UdpBinaryReceiver()
         {
             _receiver = null;
@@ -38,16 +45,18 @@ namespace RTCLib.Comm
 
         //-------------------- Dispose pattern
 
-        ~UdpBinaryReceiver()
-        {
-            Dispose(false);
-        }
+        /// <inheritdoc />
+        ~UdpBinaryReceiver() => Dispose(false);
 
         private void ReleaseUnmanagedResources()
         {
             // TODO release unmanaged resources here
         }
 
+        /// <summary>
+        /// Disposable pattern
+        /// </summary>
+        /// <param name="disposing">flag</param>
         protected virtual void Dispose(bool disposing)
         {
             ReleaseUnmanagedResources();
@@ -57,6 +66,9 @@ namespace RTCLib.Comm
             }
         }
 
+        /// <summary>
+        /// Disposable pattern
+        /// </summary>
         public void Dispose()
         {
             Dispose(true);

@@ -3,6 +3,10 @@ using System.Runtime.InteropServices;
 
 namespace RTCLib.Comm
 {
+    /// <summary>
+    /// Send binary struct through Udp
+    /// </summary>
+    /// <typeparam name="T">Type to send</typeparam>
     public class UdpBinarySender<T> : System.IDisposable
     {
         UdpByteSender _sender = null;
@@ -37,6 +41,9 @@ namespace RTCLib.Comm
             return ret;
         }
 
+        /// <summary>
+        /// Closing socket
+        /// </summary>
         public void Close()
         {
             _sender?.Close();
@@ -56,16 +63,18 @@ namespace RTCLib.Comm
 
         //-------------------- Dispose pattern
 
-        ~UdpBinarySender()
-        {
-            Dispose(false);
-        }
+        /// <inheritdoc />
+        ~UdpBinarySender() => Dispose(false);
 
         private void ReleaseUnmanagedResources()
         {
             // TODO release unmanaged resources here
         }
 
+        /// <summary>
+        /// Disposable pattern
+        /// </summary>
+        /// <param name="disposing"></param>
         protected virtual void Dispose(bool disposing)
         {
             ReleaseUnmanagedResources();
@@ -75,6 +84,9 @@ namespace RTCLib.Comm
             }
         }
 
+        /// <summary>
+        /// Disposable pattern
+        /// </summary>
         public void Dispose()
         {
             Dispose(true);
