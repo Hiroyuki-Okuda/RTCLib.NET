@@ -6,11 +6,14 @@
     <Company>Nagoya Univ.</Company>
     <RunAnalyzersDuringBuild>true</RunAnalyzersDuringBuild>
     <Nullable>warnings</Nullable>
+    <RootNamespace>RTCLib</RootNamespace>
+    <AssemblyName>RTCLib</AssemblyName>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <OutputPath>..\build</OutputPath>
     <Optimize>false</Optimize>
+    <DocumentationFile>..\documents\RTCLib.xml</DocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>

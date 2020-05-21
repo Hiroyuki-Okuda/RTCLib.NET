@@ -1,0 +1,156 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>RTCLib</name>
+    </assembly>
+    <members>
+        <member name="M:RTCLib.Comm.UdpBinaryReceiver`1.Open(System.Int32)">
+            <summary>
+            UDPの受信ポートを指定して開く
+            </summary>
+            <param name="localPort">UDP受信を受け付けるポート番号</param>
+            <returns></returns>
+        </member>
+        <member name="M:RTCLib.Comm.UdpBinaryReceiver`1.Get">
+            ターゲットになる構造体かクラスを
+            そのままバイナリイメージで送信する
+        </member>
+        <member name="M:RTCLib.Comm.UdpBinarySender`1.#ctor">
+            <summary>
+            Construct without open
+            </summary>
+        </member>
+        <member name="M:RTCLib.Comm.UdpBinarySender`1.#ctor(System.String,System.Int32)">
+            <summary>
+            Construct with open 
+            </summary>
+            <param name="remoteHost"></param>
+            <param name="remotePort"></param>
+        </member>
+        <member name="M:RTCLib.Comm.UdpBinarySender`1.Open(System.String,System.Int32)">
+            <summary>
+            UDPで送信するポートを開く
+            </summary>
+            <param name="remoteHost">送信先ホスト</param>
+            <param name="remotePort">送信先ポート</param>
+            <returns></returns>
+        </member>
+        <member name="M:RTCLib.Comm.UdpBinarySender`1.Send(`0)">
+            ターゲットになる構造体かクラスを
+            そのままバイナリイメージで送信する
+        </member>
+        <member name="M:RTCLib.Comm.UdpByteReceiver.#ctor">
+            <summary>
+            Constructor
+            </summary>
+        </member>
+        <member name="M:RTCLib.Comm.UdpByteReceiver.Open(System.Int32)">
+            <summary>
+            Open udpClient and listen for the port from 'any host'
+            </summary>
+            <param name="localPort">listening port</param>
+            <returns></returns>
+        </member>
+        <member name="M:RTCLib.Comm.UdpByteReceiver.Open(System.Net.IPAddress,System.Int32)">
+            <summary>
+            Open udpClient and listen for the port from directed host
+            </summary>
+            <param name="remoteHost">Remote host to listen. Use IPAddress.Any if you listen to any host</param>
+            <param name="localPort">listening port</param>
+            <returns></returns>
+        </member>
+        <member name="M:RTCLib.Comm.UdpByteReceiver.Open(System.String,System.Int32)">
+            <summary>
+            Open udpClient and listen for the port from directed host
+            </summary>
+            <param name="remoteHost">Remote host to listen. Use IPAddress.Any if you listen to any host</param>
+            <param name="localPort">listening port</param>
+            <returns></returns>
+        </member>
+        <member name="M:RTCLib.Comm.UdpByteReceiver.GetData(System.Int32)">
+            <summary>
+            n番目のデータを返す
+            </summary>
+            <param name="n"></param>
+            <returns></returns>
+        </member>
+        <member name="M:RTCLib.Comm.UdpByteSender.Open(System.String,System.Int32)">
+            <summary>
+            UDP通信を開く．送信する．
+            </summary>
+            <param name="remoteHost">送信先IP</param>
+            <param name="remotePort">送信先ポート</param>
+            <returns></returns>
+        </member>
+        <member name="M:RTCLib.Comm.UdpByteSender.Close">
+            <summary>
+            Close socket if opened
+            </summary>
+        </member>
+        <member name="T:RTCLib.Comm.UdpParameterSender">
+            <summary>
+            UDP Parameter sender
+            </summary>
+            Send the parameter by UDP,
+            No dependability, but simple.
+            Sending data is:
+            All data should be ascii, printable code.
+            Each command is separated by "\n".
+            Each command contains "Key" and "Data".
+            "Key" and "Data" are separated by ":"
+            Key is parameter name, data is value.
+            This class doesnt support type conversion, 
+            only sending string is supported.
+        </member>
+        <member name="F:RTCLib.Comm.UdpParameterSender.remote_host">
+            local port
+        </member>
+        <member name="F:RTCLib.Comm.UdpParameterSender.rmt_port">
+            remote host to deliver parameter
+        </member>
+        <member name="F:RTCLib.Comm.UdpParameterSender.udp">
+            remote port to deliver
+        </member>
+        <member name="F:RTCLib.Comm.UdpParameterSender.remoteEP">
+            udp client
+        </member>
+        <member name="M:RTCLib.Comm.UdpParameterSender.Open(System.String,System.Int32,System.Int32)">
+            endpoint
+            <summary>
+            Open UDP
+            </summary>
+            <param name="remote_host">Remote IP</param>
+            <param name="remote_port">Remote Port</param>
+            <param name="local_port">Sending local port</param>
+            <returns></returns>
+        </member>
+        <member name="F:RTCLib.Comm.UdpParameterReceiver.udp">
+            local port
+        </member>
+        <member name="F:RTCLib.Comm.UdpParameterReceiver.remoteEP">
+            udp client
+        </member>
+        <member name="F:RTCLib.Comm.UdpParameterReceiver.receive_buffer">
+            endpoint
+        </member>
+        <member name="F:RTCLib.Comm.UdpParameterReceiver.isAlive">
+            <summary>
+            async receive is alive
+            </summary>
+        </member>
+        <member name="F:RTCLib.Comm.UdpParameterReceiver.isTerminating">
+            <summary>
+            for termination;
+            </summary>
+        </member>
+        <member name="M:RTCLib.Comm.UdpParameterReceiver.Open(System.Int32)">
+            <summary>
+            Open UDP
+            </summary>
+            <param name="remote_host">Remote IP</param>
+            <param name="remote_port">Remote Port</param>
+            <param name="local_port">Sending local port</param>
+            <returns></returns>
+        </member>
+    </members>
+</doc>

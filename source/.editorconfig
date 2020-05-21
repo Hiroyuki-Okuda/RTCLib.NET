@@ -2,3 +2,9 @@
 
 # Default severity for all analyzer diagnostics
 dotnet_analyzer_diagnostic.severity = warning
+
+# IDE0058: 式の値が使用されていません
+csharp_style_unused_value_expression_statement_preference = discard_variable:silent
+
+# Default severity for analyzer diagnostics with category 'Style'
+dotnet_analyzer_diagnostic.category-Style.severity = silent

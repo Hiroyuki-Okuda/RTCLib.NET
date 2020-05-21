@@ -7,12 +7,12 @@
   "targets": {
     ".NETStandard,Version=v2.1": {},
     ".NETStandard,Version=v2.1/": {
-      "RTCLib.NET/1.0.0": {
+      "RTCLib/1.0.0": {
         "dependencies": {
           "Microsoft.CodeAnalysis.FxCopAnalyzers": "2.9.6"
         },
         "runtime": {
-          "RTCLib.NET.dll": {}
+          "RTCLib.dll": {}
         }
       },
       "Microsoft.CodeAnalysis.FxCopAnalyzers/2.9.6": {
@@ -30,7 +30,7 @@
     }
   },
   "libraries": {
-    "RTCLib.NET/1.0.0": {
+    "RTCLib/1.0.0": {
       "type": "project",
       "serviceable": false,
       "sha512": ""

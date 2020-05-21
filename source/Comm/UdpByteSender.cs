@@ -3,7 +3,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading.Tasks;
 
-namespace RTCLib
+namespace RTCLib.Comm
 {
     public class UdpByteSender : IDisposable
     {
@@ -11,21 +11,20 @@ namespace RTCLib
         // int _localPort; // < disabled local wait
 
         // Remote host information
-        private string _remoteHost;
+        private string _remoteHost = null;
         private int _remotePort;
 
         // udpClient client
-        System.Net.Sockets.UdpClient _udpClient;
+        System.Net.Sockets.UdpClient _udpClient = null;
 
         // send target
-        System.Net.IPEndPoint _remoteEndPoint;
+        System.Net.IPEndPoint _remoteEndPoint = null;
 
         // event executed on data send completed
         public event Action SendCompleted;
 
         public UdpByteSender()
         {
-            _remoteEndPoint = null;
         }
 
         public UdpByteSender(string remoteHost, int remotePort)
@@ -57,6 +56,16 @@ namespace RTCLib
             return 0;
         }
 
+        /// <summary>
+        /// Close socket if opened
+        /// </summary>
+        public void Close()
+        {
+            _remoteEndPoint = null;
+            _udpClient ?.Close();
+            _udpClient = null;
+        }
+
         public int Send(byte[] messageBytes)
         {
             var ret = Send(messageBytes, _remoteEndPoint);
@@ -83,12 +92,10 @@ namespace RTCLib
         public async Task<int> SendAsync(byte[] messageBytes, IPEndPoint sendTo)
         {
             Task<int> ret = null;
-            if (messageBytes != null)
-            {
-                ret = _udpClient.SendAsync(messageBytes, messageBytes.Length);
-            }
+            if (messageBytes == null) throw new ArgumentNullException(nameof(messageBytes));
+            ret = _udpClient.SendAsync(messageBytes, messageBytes.Length, sendTo);
             OnSendCompleted();
-            return await ret;
+            return await ret.ConfigureAwait(false);
         }
 
         protected virtual void OnSendCompleted()
@@ -96,9 +103,30 @@ namespace RTCLib
             SendCompleted?.Invoke();
         }
 
+
+        private void ReleaseUnmanagedResources()
+        {
+            // TODO release unmanaged resources here
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            ReleaseUnmanagedResources();
+            if (disposing)
+            {
+                _udpClient?.Dispose();
+            }
+        }
+
         public void Dispose()
         {
-            _udpClient?.Dispose();
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        ~UdpByteSender()
+        {
+            Dispose(false);
         }
     }
 }
