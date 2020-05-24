@@ -4,6 +4,38 @@
         <name>RTCLib</name>
     </assembly>
     <members>
+        <member name="T:RTCLib.Comm.UdpBinaryReceiver`1">
+            <summary>
+            Receive binary struct through UDP
+            </summary>
+            <typeparam name="T">Struct type to receive</typeparam>
+        </member>
+        <member name="P:RTCLib.Comm.UdpBinaryReceiver`1.LastReceived">
+            <summary>
+            Data received last time
+            </summary>
+        </member>
+        <member name="P:RTCLib.Comm.UdpBinaryReceiver`1.IsDataAvailable">
+            <summary>
+            Validity of LastReceived data; 
+            </summary>
+        </member>
+        <member name="T:RTCLib.Comm.UdpBinaryReceiver`1.ReceivedBytesHandler">
+            <summary>
+            Handler on the data receive
+            </summary>
+            <param name="receivedData">Received data structure</param>
+        </member>
+        <member name="E:RTCLib.Comm.UdpBinaryReceiver`1.OnDataReceived">
+            <summary>
+            Event on receiving binary data
+            </summary>
+        </member>
+        <member name="M:RTCLib.Comm.UdpBinaryReceiver`1.#ctor">
+            <summary>
+            Constructor
+            </summary>
+        </member>
         <member name="M:RTCLib.Comm.UdpBinaryReceiver`1.Open(System.Int32)">
             <summary>
             UDPの受信ポートを指定して開く
@@ -14,6 +46,26 @@
         <member name="M:RTCLib.Comm.UdpBinaryReceiver`1.Get">
             ターゲットになる構造体かクラスを
             そのままバイナリイメージで送信する
+        </member>
+        <member name="M:RTCLib.Comm.UdpBinaryReceiver`1.Finalize">
+            <inheritdoc />
+        </member>
+        <member name="M:RTCLib.Comm.UdpBinaryReceiver`1.Dispose(System.Boolean)">
+            <summary>
+            Disposable pattern
+            </summary>
+            <param name="disposing">flag</param>
+        </member>
+        <member name="M:RTCLib.Comm.UdpBinaryReceiver`1.Dispose">
+            <summary>
+            Disposable pattern
+            </summary>
+        </member>
+        <member name="T:RTCLib.Comm.UdpBinarySender`1">
+            <summary>
+            Send binary struct through Udp
+            </summary>
+            <typeparam name="T">Type to send</typeparam>
         </member>
         <member name="M:RTCLib.Comm.UdpBinarySender`1.#ctor">
             <summary>
@@ -27,21 +79,146 @@
             <param name="remoteHost"></param>
             <param name="remotePort"></param>
         </member>
-        <member name="M:RTCLib.Comm.UdpBinarySender`1.Open(System.String,System.Int32)">
+        <member name="M:RTCLib.Comm.UdpBinarySender`1.#ctor(System.Net.IPEndPoint)">
             <summary>
-            UDPで送信するポートを開く
+            Construct with open 
             </summary>
-            <param name="remoteHost">送信先ホスト</param>
-            <param name="remotePort">送信先ポート</param>
-            <returns></returns>
+            <param name="remoteEndPoint">Remote endpoint(IPAddress+Port) to send</param>
+        </member>
+        <member name="M:RTCLib.Comm.UdpBinarySender`1.Close">
+            <summary>
+            Closing socket
+            </summary>
         </member>
         <member name="M:RTCLib.Comm.UdpBinarySender`1.Send(`0)">
             ターゲットになる構造体かクラスを
             そのままバイナリイメージで送信する
         </member>
+        <member name="M:RTCLib.Comm.UdpBinarySender`1.Finalize">
+            <inheritdoc />
+        </member>
+        <member name="M:RTCLib.Comm.UdpBinarySender`1.Dispose(System.Boolean)">
+            <summary>
+            Disposable pattern
+            </summary>
+            <param name="disposing"></param>
+        </member>
+        <member name="M:RTCLib.Comm.UdpBinarySender`1.Dispose">
+            <summary>
+            Disposable pattern
+            </summary>
+        </member>
+        <member name="T:RTCLib.Comm.UdpBinaryTransceiver`1">
+            <summary>
+            Receive binary struct through UDP
+            </summary>
+            <typeparam name="T">Struct type to receive</typeparam>
+        </member>
+        <member name="P:RTCLib.Comm.UdpBinaryTransceiver`1.LastReceived">
+            <summary>
+            Data received last time
+            </summary>
+        </member>
+        <member name="P:RTCLib.Comm.UdpBinaryTransceiver`1.IsDataAvailable">
+            <summary>
+            Validity of LastReceived data; 
+            </summary>
+        </member>
+        <member name="T:RTCLib.Comm.UdpBinaryTransceiver`1.ReceivedBytesHandler">
+            <summary>
+            Handler on the data receive
+            </summary>
+            <param name="receivedData">Received data structure</param>
+        </member>
+        <member name="E:RTCLib.Comm.UdpBinaryTransceiver`1.OnDataReceived">
+            <summary>
+            Event on receiving binary data
+            </summary>
+        </member>
+        <member name="M:RTCLib.Comm.UdpBinaryTransceiver`1.#ctor(System.Net.IPEndPoint,System.Int32,System.Net.IPAddress)">
+            <summary>
+            Open Udp client 
+            </summary>
+            <param name="hostToSend">remote host to send including the port.
+            use broadcast for broadcasting to all hosts</param>
+            <param name="localPort">UDP port number to listen</param>
+            <param name="hostToListen">Remote host to listen. Use IPAddress.Any or use default if you listen any host.</param>
+            <returns></returns>
+        </member>
+        <member name="M:RTCLib.Comm.UdpBinaryTransceiver`1.#ctor(System.String,System.Int32,System.Int32,System.Net.IPAddress)">
+            <summary>
+            Open Udp client 
+            </summary>
+            <param name="remoteIp">Remote IP to send</param>
+            <param name="remotePort">Remote port to send</param>
+            <param name="localPort">Receive port to listen</param>
+            <param name="hostToListen">Remote host to listen. Use IPAddress.Any or use default if you listen any host.</param>
+            <returns></returns>
+        </member>
+        <member name="M:RTCLib.Comm.UdpBinaryTransceiver`1.Close">
+            <summary>
+            Close socket and initialize
+            </summary>
+        </member>
+        <member name="M:RTCLib.Comm.UdpBinaryTransceiver`1.Send(`0)">
+            <summary>
+            Send structure data by binary send
+            </summary>
+            <param name="target">data to send</param>
+            <returns></returns>
+        </member>
+        <member name="M:RTCLib.Comm.UdpBinaryTransceiver`1.Get">
+            ターゲットになる構造体かクラスを
+            そのままバイナリイメージで送信する
+        </member>
+        <member name="M:RTCLib.Comm.UdpBinaryTransceiver`1.Finalize">
+            <inheritdoc />
+        </member>
+        <member name="M:RTCLib.Comm.UdpBinaryTransceiver`1.Dispose(System.Boolean)">
+            <summary>
+            Disposable pattern
+            </summary>
+            <param name="disposing">flag</param>
+        </member>
+        <member name="M:RTCLib.Comm.UdpBinaryTransceiver`1.Dispose">
+            <summary>
+            Disposable pattern
+            </summary>
+        </member>
+        <member name="T:RTCLib.Comm.UdpByteReceiver">
+            <summary>
+            Binary data receiver through Udp
+            </summary>
+        </member>
+        <member name="T:RTCLib.Comm.UdpByteReceiver.ReceivedBytesHandler">
+            <summary>
+            Handler on the data gram receive
+            </summary>
+            <param name="dataBytes"></param>
+        </member>
+        <member name="E:RTCLib.Comm.UdpByteReceiver.OnBytesReceived">
+            <summary>
+            Event on receiving binary data
+            </summary>
+        </member>
         <member name="M:RTCLib.Comm.UdpByteReceiver.#ctor">
             <summary>
             Constructor
+            </summary>
+        </member>
+        <member name="M:RTCLib.Comm.UdpByteReceiver.#ctor(System.Int32)">
+            <summary>
+            Constructor with open port
+            </summary>
+        </member>
+        <member name="M:RTCLib.Comm.UdpByteReceiver.#ctor(System.Net.IPAddress,System.Int32)">
+            <summary>
+            Constructor with listening port / remote host
+            </summary>
+        </member>
+        <member name="M:RTCLib.Comm.UdpByteReceiver.#ctor(System.String,System.Int32)">
+            <summary>
+            Constructor with listening port / remote host
             </summary>
         </member>
         <member name="M:RTCLib.Comm.UdpByteReceiver.Open(System.Int32)">
@@ -67,6 +244,28 @@
             <param name="localPort">listening port</param>
             <returns></returns>
         </member>
+        <member name="M:RTCLib.Comm.UdpByteReceiver.Close">
+            <summary>
+            Closing socket
+            </summary>
+        </member>
+        <member name="M:RTCLib.Comm.UdpByteReceiver.ClearBuffer">
+            <summary>
+            Clear buffer
+            </summary>
+        </member>
+        <member name="M:RTCLib.Comm.UdpByteReceiver.GetAllData">
+            <summary>
+            Get all received data
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:RTCLib.Comm.UdpByteReceiver.GetAvailableDataCount">
+            <summary>
+            Get available data packets count
+            </summary>
+            <returns></returns>
+        </member>
         <member name="M:RTCLib.Comm.UdpByteReceiver.GetData(System.Int32)">
             <summary>
             n番目のデータを返す
@@ -74,12 +273,56 @@
             <param name="n"></param>
             <returns></returns>
         </member>
+        <member name="M:RTCLib.Comm.UdpByteReceiver.Dispose(System.Boolean)">
+            <summary>
+            Disposable pattern
+            </summary>
+            <param name="disposing"></param>
+        </member>
+        <member name="M:RTCLib.Comm.UdpByteReceiver.Dispose">
+            <summary>
+            Disposable pattern
+            </summary>
+        </member>
+        <member name="M:RTCLib.Comm.UdpByteReceiver.Finalize">
+            <inheritdoc />
+        </member>
+        <member name="T:RTCLib.Comm.UdpByteSender">
+            <summary>
+            Send binary data through UDP
+            </summary>
+        </member>
+        <member name="E:RTCLib.Comm.UdpByteSender.SendCompleted">
+            <summary>
+            Callback action on completing data sending
+            </summary>
+        </member>
+        <member name="M:RTCLib.Comm.UdpByteSender.#ctor(System.String,System.Int32)">
+            <summary>
+            Constructor
+            </summary>
+            <param name="remoteHost">Name or IP address of remote host to send</param>
+            <param name="remotePort">Port number to send</param>
+        </member>
+        <member name="M:RTCLib.Comm.UdpByteSender.#ctor(System.Net.IPEndPoint)">
+            <summary>
+            Constructor
+            </summary>
+            <param name="remoteEndPoint">Remote host to send</param>
+        </member>
         <member name="M:RTCLib.Comm.UdpByteSender.Open(System.String,System.Int32)">
             <summary>
-            UDP通信を開く．送信する．
+            Open UDP connection
             </summary>
-            <param name="remoteHost">送信先IP</param>
-            <param name="remotePort">送信先ポート</param>
+            <param name="remoteHost">Remote IP address to send</param>
+            <param name="remotePort">Remote port to send</param>
+            <returns></returns>
+        </member>
+        <member name="M:RTCLib.Comm.UdpByteSender.Open(System.Net.IPEndPoint)">
+            <summary>
+            Open Udp connection
+            </summary>
+            <param name="remoteEndpoint">Remote endpoint to send</param>
             <returns></returns>
         </member>
         <member name="M:RTCLib.Comm.UdpByteSender.Close">
@@ -87,42 +330,60 @@
             Close socket if opened
             </summary>
         </member>
-        <member name="T:RTCLib.Comm.UdpParameterSender">
+        <member name="M:RTCLib.Comm.UdpByteSender.Send(System.Byte[])">
             <summary>
-            UDP Parameter sender
+            Send data packet synchronously 
             </summary>
-            Send the parameter by UDP,
-            No dependability, but simple.
-            Sending data is:
-            All data should be ascii, printable code.
-            Each command is separated by "\n".
-            Each command contains "Key" and "Data".
-            "Key" and "Data" are separated by ":"
-            Key is parameter name, data is value.
-            This class doesnt support type conversion, 
-            only sending string is supported.
-        </member>
-        <member name="F:RTCLib.Comm.UdpParameterSender.remote_host">
-            local port
-        </member>
-        <member name="F:RTCLib.Comm.UdpParameterSender.rmt_port">
-            remote host to deliver parameter
-        </member>
-        <member name="F:RTCLib.Comm.UdpParameterSender.udp">
-            remote port to deliver
-        </member>
-        <member name="F:RTCLib.Comm.UdpParameterSender.remoteEP">
-            udp client
-        </member>
-        <member name="M:RTCLib.Comm.UdpParameterSender.Open(System.String,System.Int32,System.Int32)">
-            endpoint
-            <summary>
-            Open UDP
-            </summary>
-            <param name="remote_host">Remote IP</param>
-            <param name="remote_port">Remote Port</param>
-            <param name="local_port">Sending local port</param>
+            <param name="messageBytes"></param>
             <returns></returns>
+        </member>
+        <member name="M:RTCLib.Comm.UdpByteSender.Send(System.Byte[],System.Net.IPEndPoint)">
+            <summary>
+            Send data packet synchronously
+            </summary>
+            <param name="messageBytes"></param>
+            <param name="sendTo"></param>
+            <returns></returns>
+        </member>
+        <member name="M:RTCLib.Comm.UdpByteSender.SendAsync(System.Byte[])">
+            <summary>
+            Send data packet asynchronously
+            </summary>
+            <param name="messageBytes">Data to send</param>
+            <returns></returns>
+        </member>
+        <member name="M:RTCLib.Comm.UdpByteSender.SendAsync(System.Byte[],System.Net.IPEndPoint)">
+            <summary>
+            Send data packet asynchronously
+            </summary>
+            <param name="messageBytes">Data to send</param>
+            <param name="sendTo">Remote host to send</param>
+            <returns></returns>
+            <exception cref="T:System.ArgumentNullException"></exception>
+        </member>
+        <member name="M:RTCLib.Comm.UdpByteSender.OnSendCompleted">
+            <summary>
+            Event invoker
+            </summary>
+        </member>
+        <member name="M:RTCLib.Comm.UdpByteSender.Dispose(System.Boolean)">
+            <summary>
+            Disposable pattern
+            </summary>
+            <param name="disposing">flag</param>
+        </member>
+        <member name="M:RTCLib.Comm.UdpByteSender.Dispose">
+            <summary>
+            Disposable pattern
+            </summary>
+        </member>
+        <member name="M:RTCLib.Comm.UdpByteSender.Finalize">
+            <inheritdoc />
+        </member>
+        <member name="T:RTCLib.Comm.UdpParameterReceiver">
+            <summary>
+            
+            </summary>
         </member>
         <member name="F:RTCLib.Comm.UdpParameterReceiver.udp">
             local port
@@ -151,6 +412,69 @@
             <param name="remote_port">Remote Port</param>
             <param name="local_port">Sending local port</param>
             <returns></returns>
+        </member>
+        <member name="T:RTCLib.Comm.UdpParameterSender">
+            <summary>
+            UDP Parameter sender
+            </summary>
+            Send the parameter by UDP,
+            No dependability, but simple.
+            Sending data is:
+            All data should be ascii, printable code.
+            Each command is separated by "\n".
+            Each command contains "Key" and "Data".
+            "Key" and "Data" are separated by ":"
+            Key is parameter name, data is value.
+            This class doesnt support type conversion, 
+            only sending string is supported.
+        </member>
+        <member name="F:RTCLib.Comm.UdpParameterSender.remote_host">
+            local port
+        </member>
+        <member name="F:RTCLib.Comm.UdpParameterSender.rmt_port">
+            remote host to deliver parameter
+        </member>
+        <member name="M:RTCLib.Comm.UdpParameterSender.Open(System.String,System.Int32,System.Int32)">
+            <summary>
+            Open Udp socket
+            </summary>
+            <param name="remoteHost"></param>
+            <param name="remotePort"></param>
+            <param name="localPort"></param>
+            <returns></returns>
+        </member>
+        <member name="M:RTCLib.Comm.UdpParameterSender.Send(System.String,System.String)">
+            <summary>
+            Send pair of key and data
+            </summary>
+            <param name="key"></param>
+            <param name="data"></param>
+            <returns></returns>
+        </member>
+        <member name="M:RTCLib.Comm.UdpParameterSender.Finalize">
+            <inheritdoc />
+        </member>
+        <member name="T:RTCLib.Sys.Interop">
+            <summary>
+            Marshaling utilities
+            </summary>
+        </member>
+        <member name="M:RTCLib.Sys.Interop.StructureToBytes``1(``0)">
+            <summary>
+            Convert structure to binary data
+            </summary>
+            <param name="target">target instance</param>
+            <typeparam name="T">target type</typeparam>
+            <returns></returns>
+        </member>
+        <member name="M:RTCLib.Sys.Interop.BytesToStructure``1(System.Byte[])">
+            <summary>
+            Convert binary data to structure
+            </summary>
+            <param name="target">target memory data</param>
+            <typeparam name="T">target type</typeparam>
+            <returns></returns>
+            <exception cref="T:System.ArgumentNullException"></exception>
         </member>
     </members>
 </doc>

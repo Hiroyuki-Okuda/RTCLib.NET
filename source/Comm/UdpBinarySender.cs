@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Net;
 using System.Runtime.InteropServices;
 
 namespace RTCLib.Comm
@@ -25,21 +26,19 @@ namespace RTCLib.Comm
         /// <param name="remotePort"></param>
         public UdpBinarySender(string remoteHost, int remotePort)
         {
-            Open(remoteHost, remotePort);
+            _sender = new UdpByteSender(remoteHost, remotePort);
         }
 
+
         /// <summary>
-        /// UDPで送信するポートを開く
+        /// Construct with open 
         /// </summary>
-        /// <param name="remoteHost">送信先ホスト</param>
-        /// <param name="remotePort">送信先ポート</param>
-        /// <returns></returns>
-        public int Open( string remoteHost, int remotePort)
+        /// <param name="remoteEndPoint">Remote endpoint(IPAddress+Port) to send</param>
+        public UdpBinarySender(IPEndPoint remoteEndPoint)
         {
-            _sender = new UdpByteSender();
-            int ret = _sender.Open(remoteHost, remotePort);
-            return ret;
+            _sender = new UdpByteSender(remoteEndPoint);
         }
+
 
         /// <summary>
         /// Closing socket

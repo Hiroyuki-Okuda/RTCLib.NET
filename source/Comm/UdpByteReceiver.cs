@@ -24,7 +24,7 @@ namespace RTCLib.Comm
         private System.Net.IPEndPoint _receivedEp;
 
         // received packets
-        private readonly LinkedList<byte[]> _receivedPackets;
+        private readonly LinkedList<byte[]> _receivedPackets = new LinkedList<byte[]>();
 
         // mutex for async receive
         private readonly System.Threading.Mutex _mutex = new System.Threading.Mutex();
@@ -35,8 +35,10 @@ namespace RTCLib.Comm
         /// <param name="dataBytes"></param>
         public delegate void ReceivedBytesHandler(byte[] dataBytes);
 
-        //! Event on receiving binary data
-        event ReceivedBytesHandler OnBytesReceived;
+        /// <summary>
+        /// Event on receiving binary data
+        /// </summary>
+        public event ReceivedBytesHandler OnBytesReceived;
 
         /// <summary>
         /// Constructor
@@ -44,6 +46,33 @@ namespace RTCLib.Comm
         public UdpByteReceiver()
         {
             _receivedPackets = new LinkedList<byte[]>();
+        }
+
+        /// <summary>
+        /// Constructor with open port
+        /// </summary>
+        public UdpByteReceiver(int localPort)
+        {
+            _receivedPackets = new LinkedList<byte[]>();
+            Open(localPort);
+        }
+
+        /// <summary>
+        /// Constructor with listening port / remote host
+        /// </summary>
+        public UdpByteReceiver(IPAddress remoteHost, int localPort)
+        {
+            _receivedPackets = new LinkedList<byte[]>();
+            Open(remoteHost, localPort);
+        }
+
+        /// <summary>
+        /// Constructor with listening port / remote host
+        /// </summary>
+        public UdpByteReceiver(string remoteHost, int localPort)
+        {
+            _receivedPackets = new LinkedList<byte[]>();
+            Open(remoteHost, localPort);
         }
 
         /// <summary>

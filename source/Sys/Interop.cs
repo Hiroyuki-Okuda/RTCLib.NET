@@ -5,8 +5,17 @@ using System.Text;
 
 namespace RTCLib.Sys
 {
-    class Interop
+    /// <summary>
+    /// Marshaling utilities
+    /// </summary>
+    public static class Interop
     {
+        /// <summary>
+        /// Convert structure to binary data
+        /// </summary>
+        /// <param name="target">target instance</param>
+        /// <typeparam name="T">target type</typeparam>
+        /// <returns></returns>
         public static byte[] StructureToBytes<T>(T target)
         {
             int size = Marshal.SizeOf(target);
@@ -18,6 +27,13 @@ namespace RTCLib.Sys
             return bytes;
         }
 
+        /// <summary>
+        /// Convert binary data to structure
+        /// </summary>
+        /// <param name="target">target memory data</param>
+        /// <typeparam name="T">target type</typeparam>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException"></exception>
         public static T BytesToStructure<T>(byte[] target)
         {
             int size = Marshal.SizeOf(typeof(T));

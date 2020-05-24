@@ -32,18 +32,20 @@ namespace RTCLib.Comm
         /// <summary>
         /// Constructor
         /// </summary>
-        public UdpByteSender()
-        {
-        }
-
-        /// <summary>
-        /// Constructor
-        /// </summary>
         /// <param name="remoteHost">Name or IP address of remote host to send</param>
         /// <param name="remotePort">Port number to send</param>
         public UdpByteSender(string remoteHost, int remotePort)
         {
             _ = Open(remoteHost, remotePort);
+        }
+
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        /// <param name="remoteEndPoint">Remote host to send</param>
+        public UdpByteSender(IPEndPoint remoteEndPoint)
+        {
+            _ = Open(remoteEndPoint);
         }
 
         private void CreateUdpClient()
@@ -56,16 +58,28 @@ namespace RTCLib.Comm
         }
 
         /// <summary>
-        /// UDP通信を開く．送信する．
+        /// Open UDP connection
         /// </summary>
-        /// <param name="remoteHost">送信先IP</param>
-        /// <param name="remotePort">送信先ポート</param>
+        /// <param name="remoteHost">Remote IP address to send</param>
+        /// <param name="remotePort">Remote port to send</param>
         /// <returns></returns>
-        public int Open( string remoteHost, int remotePort ) {
+        private int Open( string remoteHost, int remotePort ) {
             _remoteHost = remoteHost;
             _remotePort = remotePort;
             _remoteEndPoint = new IPEndPoint(IPAddress.Parse(_remoteHost), _remotePort);
 
+            Open(_remoteEndPoint);
+            return 0;
+        }
+
+        /// <summary>
+        /// Open Udp connection
+        /// </summary>
+        /// <param name="remoteEndpoint">Remote endpoint to send</param>
+        /// <returns></returns>
+        private int Open(IPEndPoint remoteEndpoint)
+        {
+            _remoteEndPoint = remoteEndpoint;
             CreateUdpClient();
             return 0;
         }
