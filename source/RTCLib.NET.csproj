@@ -17,6 +17,22 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Fio\CsvReader_Obsolute.cs" />
+    <Compile Remove="Fio\CsvWriter.cs" />
+    <Compile Remove="Fio\FilePath.cs" />
+    <Compile Remove="Fio\Logger.cs" />
+    <Compile Remove="Fio\ParameterLoader.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="Fio\CsvReader_Obsolute.cs" />
+    <None Include="Fio\CsvWriter.cs" />
+    <None Include="Fio\FilePath.cs" />
+    <None Include="Fio\Logger.cs" />
+    <None Include="Fio\ParameterLoader.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="2.9.6">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

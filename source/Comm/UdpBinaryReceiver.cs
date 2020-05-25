@@ -63,6 +63,15 @@ namespace RTCLib.Comm
             return ret;
         }
 
+        /// <summary>
+        /// Close socket
+        /// </summary>
+        public void Close()
+        {
+            _receiver?.Close();
+            _receiver = null;
+        }
+
         /// ターゲットになる構造体かクラスを
         /// そのままバイナリイメージで送信する
         public T Get()

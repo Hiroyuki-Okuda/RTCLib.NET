@@ -40,8 +40,7 @@ namespace XUnitTestRTCLib
             cRandom.NextBytes(datatoSend);
 
             RTCLib.Comm.UdpByteSender sender = new UdpByteSender("127.0.0.1", 30001);
-            RTCLib.Comm.UdpByteReceiver receiver = new UdpByteReceiver();
-            receiver.Open(30001);
+            RTCLib.Comm.UdpByteReceiver receiver = new UdpByteReceiver(30001);
 
             byte[] receivedData = null;
             bool received = false;
@@ -51,25 +50,28 @@ namespace XUnitTestRTCLib
                 received = true;
             };
 
-            // send 
+            // send
             sender.Send(datatoSend);
 
             // 1 sec wait
-            for (int i = 0; i < 100; i++)
-            {
-                Thread.Sleep(10);
-                if (received) break;
-            }
-
+            for (int i = 0; i < 100; i++){ Thread.Sleep(10); if (received) break; }
+            // equality check
             if (received)
-            {
-                // check contents
                 datatoSend.Is(receivedData);
-            }
             else
-            {
                 Assert.True(false);
-            }
+
+            // send
+            received = false;
+            sender.Send(datatoSend);
+            datatoSend[0] = (byte)(datatoSend[0] + 1);
+            // 1 sec wait
+            for (int j = 0; j < 100; j++) { Thread.Sleep(10); if (received) break; }
+            // equality check
+            if (received)
+                datatoSend.IsNot(receivedData);
+            else
+                Assert.True(false);
         }
 
         [Fact(DisplayName = "Check UdpBinarySender/Receiver")]
@@ -82,8 +84,8 @@ namespace XUnitTestRTCLib
             toSendSt.intarray = new int[4]{1, 2, 3, 4};
 
 
-            RTCLib.Comm.UdpBinarySender<TestSt> sender = new UdpBinarySender<TestSt>("127.0.0.1", 30001);
-            RTCLib.Comm.UdpBinaryReceiver<TestSt> receiver = new UdpBinaryReceiver<TestSt>();
+            using RTCLib.Comm.UdpBinarySender<TestSt> sender = new UdpBinarySender<TestSt>("127.0.0.1", 30001);
+            using RTCLib.Comm.UdpBinaryReceiver<TestSt> receiver = new UdpBinaryReceiver<TestSt>();
             receiver.Open(30001);
 
             TestSt receivedData = default;
@@ -114,7 +116,8 @@ namespace XUnitTestRTCLib
             {
                 Assert.True(false);
             }
-
+            sender.Close();
+            receiver.Close();
         }
 
         [Fact(DisplayName = "Check UdpBinaryTransceiver")]
@@ -126,9 +129,9 @@ namespace XUnitTestRTCLib
             toSendSt.mojiretsu = "mogemoge!";
             toSendSt.intarray = new int[4] { 1, 2, 3, 4 };
 
-            UdpBinaryTransceiver<TestSt> sender = new UdpBinaryTransceiver<TestSt>
+            using UdpBinaryTransceiver<TestSt> sender = new UdpBinaryTransceiver<TestSt>
             ( "127.0.0.1", 30001, 30002);
-            UdpBinaryTransceiver<TestSt> receiver = new UdpBinaryTransceiver<TestSt>
+            using UdpBinaryTransceiver<TestSt> receiver = new UdpBinaryTransceiver<TestSt>
                 ("127.0.0.1", 30002, 30001);
 
             TestSt receivedData = default;
@@ -159,6 +162,8 @@ namespace XUnitTestRTCLib
             {
                 Assert.True(false);
             }
+            sender.Close();
+            receiver.Close();
 
         }
     }

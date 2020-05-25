@@ -10,45 +10,46 @@ namespace RTCLib.Comm
     /// </summary>
     public class UdpParameterReceiver
     {
-        public Dictionary<string, string> param = new Dictionary<string, string>();
+        /// <summary>
+        /// 
+        /// </summary>
+        public Dictionary<string, string> Param = new Dictionary<string, string>();
 
-        int lcl_port;       /// local port
+        int _lclPort;       /// local port
 
         //string remote_host; /// remote host to deliver parameter
         //int rmt_port;       /// remote port to deliver
 
-        System.Net.Sockets.UdpClient udp;   /// udp client
+        System.Net.Sockets.UdpClient _udp;   /// udp client
 
-        System.Net.IPEndPoint remoteEP;     /// endpoint
+        System.Net.IPEndPoint _remoteEp;     /// endpoint
 
-        string receive_buffer = "";
+        string _receiveBuffer = "";
 
         /// <summary>
         /// async receive is alive
         /// </summary>
-        public bool isAlive = false;
+        public bool IsAlive = false;
 
         /// <summary>
         /// for termination;
         /// </summary>
-        public bool isTerminating = false;
+        public bool IsTerminating = false;
 
         /// <summary>
         /// Open UDP
         /// </summary>
-        /// <param name="remote_host">Remote IP</param>
-        /// <param name="remote_port">Remote Port</param>
-        /// <param name="local_port">Sending local port</param>
+        /// <param name="localPort">Sending local port</param>
         /// <returns></returns>
-        public int Open(int _local_port)
+        public int Open(int localPort)
         {
-            lcl_port = _local_port;
+            _lclPort = localPort;
 
             // Create UDP client
-            udp = new System.Net.Sockets.UdpClient(lcl_port);
+            _udp = new System.Net.Sockets.UdpClient(_lclPort);
 
             // Enable Broadcast
-            udp.EnableBroadcast = true;
+            _udp.EnableBroadcast = true;
 
             // Set remote endpoint
             //remoteEP = new IPEndPoint(IPAddress.Any, 0);
@@ -58,37 +59,43 @@ namespace RTCLib.Comm
             return 0;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
         public void StartReceiving()
         {
-            receive_buffer = "";
+            _receiveBuffer = "";
             AsyncCallback callback = new AsyncCallback(ReceiveCallBack);
-            udp.BeginReceive(callback, udp);
-            isAlive = true;
-            isTerminating = false;
+            _udp.BeginReceive(callback, _udp);
+            IsAlive = true;
+            IsTerminating = false;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
         public void StopReceiving()
         {
-            isTerminating = true;
+            IsTerminating = true;
         }
 
         private void ReceiveCallBack(IAsyncResult res)
         {
             //if (!res.IsCompleted) return;
-            byte[] data = udp.EndReceive(res, ref remoteEP);
+            byte[] data = _udp.EndReceive(res, ref _remoteEp);
 
             Encoding enc = Encoding.ASCII;
             string str = enc.GetString(data);
-            receive_buffer = str;   // no concatenation now
-            ParseString(receive_buffer);
+            _receiveBuffer = str;   // no concatenation now
+            ParseString(_receiveBuffer);
 
-            if (!isTerminating)
+            if (!IsTerminating)
             {
                 AsyncCallback callback = new AsyncCallback(ReceiveCallBack);
-                udp.BeginReceive(callback, udp);
+                _udp.BeginReceive(callback, _udp);
             }
             else {
-                isAlive = false;
+                IsAlive = false;
             }
         }
 
@@ -98,8 +105,8 @@ namespace RTCLib.Comm
             foreach (var y in x)
             {
                 var z = y.Split(new char[] { ':' }, StringSplitOptions.RemoveEmptyEntries);
-                if (z.Count() != 2) continue;
-                param[z[0]] = z[1];
+                if (z.Length != 2) continue;
+                Param[z[0]] = z[1];
             }
         }
 

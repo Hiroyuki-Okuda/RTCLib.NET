@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Net.Sockets;
 
 namespace RTCLib.Comm
 {
@@ -225,7 +226,20 @@ namespace RTCLib.Comm
         
         private void ReceiveCallBack(IAsyncResult Asr)
         {
-            byte[] dat = _udpClient.EndReceive( Asr, ref _receivedEp);
+            if(_udpClient==null)return;
+            byte[] dat = null;
+            try
+            {
+                dat = _udpClient.EndReceive(Asr, ref _receivedEp);
+            }
+            catch (SocketException ex)
+            {
+                return;
+            }
+            catch (ObjectDisposedException ex)
+            {
+                return;
+            }
 
             OnBytesReceived?.Invoke(dat);
 

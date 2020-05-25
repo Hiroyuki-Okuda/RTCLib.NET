@@ -43,6 +43,11 @@
             <param name="localPort">UDP受信を受け付けるポート番号</param>
             <returns></returns>
         </member>
+        <member name="M:RTCLib.Comm.UdpBinaryReceiver`1.Close">
+            <summary>
+            Close socket
+            </summary>
+        </member>
         <member name="M:RTCLib.Comm.UdpBinaryReceiver`1.Get">
             ターゲットになる構造体かクラスを
             そのままバイナリイメージで送信する
@@ -453,6 +458,158 @@
         </member>
         <member name="M:RTCLib.Comm.UdpParameterSender.Finalize">
             <inheritdoc />
+        </member>
+        <member name="T:RTCLib.Fio.CsvReader">
+            <summary>
+            Fast CSV reader for proper format
+            </summary>
+            This class is applicable for 
+            number(double) only CSV file with proper header.
+            This class do no error check 
+            to maintain the fast speed reading.
+             
+            Blank cell is loaded as "NaN".
+            
+        </member>
+        <member name="F:RTCLib.Fio.CsvReader.Data">
+            <summary>
+            Loaded data
+            </summary>
+        </member>
+        <member name="F:RTCLib.Fio.CsvReader.Tags">
+            <summary>
+            Dictionary of index with tags
+            </summary>
+        </member>
+        <member name="P:RTCLib.Fio.CsvReader.IsHeaderLoaded">
+            <summary>
+            If data is loaded with tags or not;
+            </summary>
+        </member>
+        <member name="F:RTCLib.Fio.CsvReader.SkipLine">
+            <summary>
+            Skipping lines, 0 = normal, 1 : every two rows
+            </summary>
+        </member>
+        <member name="M:RTCLib.Fio.CsvReader.#ctor">
+            <summary>
+            Constructor
+            </summary>
+        </member>
+        <member name="M:RTCLib.Fio.CsvReader.SetDelimiter(System.Char)">
+            <summary>
+            set delimiters
+            </summary>
+            <param name="delim">delimiter</param>
+        </member>
+        <member name="M:RTCLib.Fio.CsvReader.SetDelimiter(System.Char[])">
+            <summary>
+            set delimiters
+            </summary>
+            <param name="delim"></param>
+        </member>
+        <member name="M:RTCLib.Fio.CsvReader.ClearData">
+            <summary>
+            Clear loaded data
+            </summary>
+        </member>
+        <member name="M:RTCLib.Fio.CsvReader.Open(System.String,System.Int32,System.Text.Encoding)">
+            <summary>
+            Open csv file and read it
+            </summary>
+            <param name="fileName">file name to open</param>
+            <param name="numOfHeaderRows">
+            number of header lines. 
+            last line is used as tags of columns
+            </param>
+            <param name="encoding">Text encoding</param>
+        </member>
+        <member name="M:RTCLib.Fio.CsvReader.OpenImple(System.String,System.Int32,System.Text.Encoding)">
+            <summary>
+            Implement of open csv
+            </summary>
+            <param name="fileName">filename</param>
+            <param name="numOfHeaderRows">index of tags line</param>
+            <param name="encoding">Text encoding</param>
+        </member>
+        <member name="M:RTCLib.Fio.CsvReader.ParseTags(System.String)">
+            <summary>
+            parse tags
+            </summary>
+            <param name="tagLine"></param>
+        </member>
+        <member name="P:RTCLib.Fio.CsvReader.Item(System.Int32)">
+            <summary>
+            indexer for row data
+            </summary>
+            <param name="index">index of row to access</param>
+            <returns>double array of directed row</returns>
+        </member>
+        <member name="P:RTCLib.Fio.CsvReader.Item(System.Int32,System.Int32)">
+            <summary>
+            indexer for element
+            </summary>
+            <param name="row">index of row to access</param>
+            <param name="col">index of column to access</param>
+            <returns>value of (row, col)</returns>
+        </member>
+        <member name="P:RTCLib.Fio.CsvReader.Item(System.Int32,System.String)">
+            <summary>
+            Indexer to access cell with row and tags
+            </summary>
+            <param name="row">index of row to access</param>
+            <param name="tag">tag name of column to access</param>
+            <returns></returns>
+        </member>
+        <member name="M:RTCLib.Fio.CsvReader.IsTagExisting(System.String)">
+            <summary>
+            Check the directed tag exists or not
+            </summary>
+            <param name="key">tag to find</param>
+            <returns></returns>
+        </member>
+        <member name="P:RTCLib.Fio.CsvReader.IsDataLoaded">
+            <summary>
+            Return true if the data is loaded
+            </summary>
+        </member>
+        <member name="M:RTCLib.Fio.CsvReader.GetIndexOfTag(System.String)">
+            <summary>
+            Get column index of targeting tag
+            </summary>
+            <param name="key">tag name to get its index</param>
+            <returns>index of column</returns>
+        </member>
+        <member name="M:RTCLib.Fio.CsvReader.GetColumn(System.Int32)">
+            <summary>
+            Getting column vector
+            </summary>
+            <param name="col">targeting column number</param>
+            <returns>column data by double array</returns>
+        </member>
+        <member name="M:RTCLib.Fio.CsvReader.GetColumn(System.String)">
+            <summary>
+            Getting column vector
+            </summary>
+            <param name="tag">Tag name to get</param>
+            <returns>column data by double array</returns>
+        </member>
+        <member name="P:RTCLib.Fio.CsvReader.Rows">
+            <summary>
+            Return number of rows
+            </summary>
+            <returns>num of rows</returns>
+        </member>
+        <member name="M:RTCLib.Fio.CsvReader.Cols(System.Int32)">
+            <summary>
+            Get number of columns
+            </summary>
+            <param name="rowIndex">Row index to check.</param>
+            <returns>
+            The number of columns in the row.
+            Number of columns can be different for each rows
+            for Jagged array
+            </returns>
         </member>
         <member name="T:RTCLib.Sys.Interop">
             <summary>

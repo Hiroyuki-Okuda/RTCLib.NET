@@ -1,167 +1,316 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 
-using Microsoft.VisualBasic.FileIO;
+using System.IO;
+using System.Net.Mime;
 
 namespace RTCLib.Fio
 {
+    /// <summary>
+    /// Fast CSV reader for proper format
+    /// </summary>
+    /// This class is applicable for 
+    /// number(double) only CSV file with proper header.
+    /// This class do no error check 
+    /// to maintain the fast speed reading.
+    ///  
+    /// Blank cell is loaded as "NaN".
+    /// 
     public class CsvReader
     {
-        public List<string> column_titles = new List<string>();
-        public List<List<double>> data = new List<List<double>>();
+        /// <summary>
+        /// Loaded data
+        /// </summary>
+        public List<double[]> Data = new List<double[]>();
 
-        // 間引き
-        public int SkipLine = 1;
+        /// <summary>
+        /// Dictionary of index with tags
+        /// </summary>
+        public Dictionary<string, int> Tags = new Dictionary<string, int>();
 
+        /// <summary>
+        /// If data is loaded with tags or not;
+        /// </summary>
+        public bool IsHeaderLoaded => (Tags != null && Tags.Count > 0);
+
+        private char[] _delimiters = new char[] { ',' };
+
+        /// <summary>
+        /// Skipping lines, 0 = normal, 1 : every two rows
+        /// </summary>
+        public int SkipLine = 0;
+
+        /// <summary>
+        /// Constructor
+        /// </summary>
         public CsvReader()
         {
-
-        }
-
-        public double this[int i,int j]
-        {
-            set
-            {
-                if (i < 0 || i >= data.Count)
-                {
-                    throw new global::System.ArgumentOutOfRangeException();
-                }
-                this.data[i][j] = value;
-            }
-            get {
-                if (i < 0 || i >= data.Count)
-                {
-                    throw new global::System.ArgumentOutOfRangeException();
-                }
-                return this.data[i][j];
-            }
-        }
-
-        int Rows() { return data.Count; }
-        int Cols() {
-            if (Rows() > 0)
-                return data[0].Count;
-            else
-                return 0;
+            ClearData();
         }
 
         /// <summary>
-        /// 指定したヘッダ文字列を持つ列の，列番号を取得
+        /// set delimiters
         /// </summary>
-        /// <param name="col_header">検索する列番号</param>
-        /// <param name="ignore_lu">true(default):大文字・小文字を無視</param>
-        public int IndexOf(string col_header, bool ignore_lu = true)
+        /// <param name="delim">delimiter</param>
+        public void SetDelimiter(char delim)
         {
-            int ret;
+            _delimiters = new char[] { delim };
+        }
 
-            ret = column_titles.FindIndex(str => str.ToLower() == col_header.ToLower());
+        /// <summary>
+        /// set delimiters
+        /// </summary>
+        /// <param name="delim"></param>
+        public void SetDelimiter(char[] delim)
+        {
+            _delimiters = delim;
+        }
 
-            //ret = column_titles.IndexOf(col_header);
-            if (ret == -1) throw new IndexOutOfRangeException("対応するヘッダ[" + col_header + "]が見つかりません．");
+        /// <summary>
+        /// Clear loaded data
+        /// </summary>
+        public void ClearData()
+        {
+            if(Data==null)
+                Data = new List<double[]>();
+            else
+               Data.Clear();
+            if (Tags== null)
+                Tags = new Dictionary<string, int>();
+            else
+                Tags.Clear();
+        }
+
+        /// <summary>
+        /// Open csv file and read it
+        /// </summary>
+        /// <param name="fileName">file name to open</param>
+        /// <param name="numOfHeaderRows">
+        /// number of header lines. 
+        /// last line is used as tags of columns
+        /// </param>
+        /// <param name="encoding">Text encoding</param>
+        public void Open(string fileName, int numOfHeaderRows = 0, System.Text.Encoding encoding = null)
+        {
+            ClearData();
+            try
+            {
+                OpenImple(fileName, numOfHeaderRows, encoding);
+            }
+            catch (FormatException o)
+            {
+                Debug.WriteLine("CSV format error @" + fileName);
+            }
+        }
+
+        /// <summary>
+        /// Implement of open csv
+        /// </summary>
+        /// <param name="fileName">filename</param>
+        /// <param name="numOfHeaderRows">index of tags line</param>
+        /// <param name="encoding">Text encoding</param>
+        private void OpenImple(string fileName, int numOfHeaderRows, System.Text.Encoding encoding)
+        {
+            global::System.IO.FileStream fs = new FileStream(fileName, FileMode.Open);
+
+            // open file as stream
+            //StreamReader sr = new StreamReader(fileName, Encoding.ASCII);
+            using StreamReader sr = encoding==null ? new StreamReader(fs) : new StreamReader(fs, encoding);
+
+            double length = fs.Length;
+
+            int readLine = 0;   //! Read complete lines 
+            int skipping = SkipLine;
+
+            // read headers 
+            if (numOfHeaderRows != 0)
+            {
+                while (!sr.EndOfStream)
+                {
+                    readLine++; // first line is 1
+                    string str = sr.ReadLine();
+
+                    // discard lines before header line
+                    if (readLine < numOfHeaderRows) continue;
+
+                    // header lines
+                    if (readLine == numOfHeaderRows)
+                    {
+                        ParseTags(str);
+                        continue;
+                    }
+                }
+            }
+
+            while (!sr.EndOfStream)
+            {
+                readLine++;
+                string str = sr.ReadLine();
+
+                double curPos = sr.BaseStream.Position / length * 100;
+                //System.Diagnostics.Debug.WriteLine("pos=" + cur_pos);
+
+                if (skipping > 0)
+                {
+                    skipping--;
+                    continue;
+                }
+                skipping = SkipLine;
+
+                string[] splitStr = str.Split(_delimiters, StringSplitOptions.None);
+
+                // for comma termination
+                int numOfColumns = splitStr.Length;
+                // remove last term if null or empty
+                if (string.IsNullOrWhiteSpace(splitStr.Last())) numOfColumns--;
+
+                // loaded numbers
+                var tmpD = new double[numOfColumns];
+
+                for (var i = 0; i < numOfColumns; ++i)
+                {
+                    try
+                    {
+                        tmpD[i] = double.Parse(splitStr[i]);
+                    }
+                    catch (FormatException)
+                    {
+                        if (0 == String.Compare(splitStr[i], "NaN", StringComparison.OrdinalIgnoreCase))
+                        {
+                            tmpD[i] = double.NaN;
+                            continue;
+                        }
+                        throw new FormatException(
+                            $"Load failure : CSV contains illegal format.\r\n Line {readLine} : "
+                            + str
+                        );
+                    }
+                }
+
+                Data.Add(tmpD);
+            }
+        }
+
+
+        /// <summary>
+        /// parse tags
+        /// </summary>
+        /// <param name="tagLine"></param>
+        private void ParseTags(string tagLine)
+        {
+            string[] temp = tagLine.Split(_delimiters, StringSplitOptions.None);
+            
+            // for comma termination
+            int numOfColumns = temp.Length;
+            if (string.IsNullOrWhiteSpace(temp.Last())) numOfColumns--;
+
+            for (int i = 0; i < numOfColumns; ++i)
+            {
+                Tags.Add(temp[i].Trim(), i);
+            }
+        }
+
+        /// <summary>
+        /// indexer for row data
+        /// </summary>
+        /// <param name="index">index of row to access</param>
+        /// <returns>double array of directed row</returns>
+        public double[] this[int index]
+        {
+            get => Data[index];
+            set => Data[index] = value;
+        }
+
+        /// <summary>
+        /// indexer for element
+        /// </summary>
+        /// <param name="row">index of row to access</param>
+        /// <param name="col">index of column to access</param>
+        /// <returns>value of (row, col)</returns>
+        public double this[int row, int col]
+        {
+            get => Data[row][col];
+            set => Data[row][col] = value;
+        }
+
+        /// <summary>
+        /// Indexer to access cell with row and tags
+        /// </summary>
+        /// <param name="row">index of row to access</param>
+        /// <param name="tag">tag name of column to access</param>
+        /// <returns></returns>
+        public double this[int row, string tag]
+        {
+            get => Data[row][Tags[tag]];
+            set => Data[row][Tags[tag]] = value;
+        }
+
+        /// <summary>
+        /// Check the directed tag exists or not
+        /// </summary>
+        /// <param name="key">tag to find</param>
+        /// <returns></returns>
+        public bool IsTagExisting(string key) => Tags.ContainsKey(key);
+
+        /// <summary>
+        /// Return true if the data is loaded
+        /// </summary>
+        public bool IsDataLoaded => Data.Count > 0;
+
+        /// <summary>
+        /// Get column index of targeting tag
+        /// </summary>
+        /// <param name="key">tag name to get its index</param>
+        /// <returns>index of column</returns>
+        public int GetIndexOfTag(string key) => Tags[key];
+
+        /// <summary>
+        /// Getting column vector
+        /// </summary>
+        /// <param name="col">targeting column number</param>
+        /// <returns>column data by double array</returns>
+        public double[] GetColumn(int col)
+        {
+            double[] ret = new double[Data.Count];
+            for (int i = 0; i < ret.Length; i++)
+            {
+                ret[i] = Data[i][col];
+            }
             return ret;
         }
 
         /// <summary>
-        /// CSVファイルからのデータ読み込み
+        /// Getting column vector
         /// </summary>
-        /// データブロックは，正方であることを推奨．
-        /// ただし，各行ごとに列数が違うのは読み込めるかも．
-        /// ヘッダは無し，あるいは指定行目にヘッダが存在する場合のみ．
-        /// (数行のデータと無関係な行があり，ヘッダ無しでデータが始まるものには未対応)
-        /// データブロック内は数字しか受け付けない．文字列があるとダメ．
-        /// デリミタは一応サポートしているが，動作は保障しない．
-        /// <param name="filename"></param>
-        /// <param name="delim"></param>
-        /// <param name="num_of_header_rows"></param>
-        public bool LoadFromFile(string filename, string delim=",", int num_of_header_rows = 1)
+        /// <param name="tag">Tag name to get</param>
+        /// <returns>column data by double array</returns>
+        public double[] GetColumn(string tag)
         {
-            TextFieldParser parser;
-            try
-            {
-                parser = new TextFieldParser(filename, global::System.Text.Encoding.GetEncoding("Shift_JIS"));
-            }
-            catch
-            {
-                return false;
-            }
-            parser.TextFieldType = FieldType.Delimited;
-
-            parser.SetDelimiters(delim);
-
-            // ヘッダ行の読み込み
-            for (int i = 0; i < num_of_header_rows; i++)
-            {
-                if (parser.EndOfData) break;
-
-
-                if (i == num_of_header_rows - 1)
-                {
-                    column_titles.Clear();
-                    string[] tmp_titles = parser.ReadFields();
-
-                    // リストに追加
-                    column_titles.InsertRange(0, tmp_titles);
-
-                    // 文字をトリム
-                    for (int j = 0; j < column_titles.Count; j++)
-                    {
-                        column_titles[j] = column_titles[j].Trim();
-                    }
-                }
-                else
-                {
-                    parser.ReadLine();
-                }
-            }
-
-            // データ行の読み込み
-            int skipping = 1;
-            while (!parser.EndOfData)
-            {
-                string[] row;
-                // 行スキップが無いか，表示行の場合
-                if (skipping > 1)
-                {
-                    parser.ReadLine();
-                    skipping--;
-                    continue;
-                }
-                else
-                {
-                    row = parser.ReadFields(); // 1行読み込み
-                    skipping = SkipLine;
-                }
-
-                List<double> row_data = new List<double>(row.Length);
-                // 配列rowの要素は読み込んだ行の各フィールドの値
-                for (int i=0; i < row.Length; i++)
-                {
-                    string trim = row[i].Trim();
-                    if (trim == "") continue;
-                    if (trim.ToLower() == "nan")
-                    {
-                        row_data.Add(double.NaN);
-                        continue;
-                    }
-                    //if()
-                    try
-                    {
-                        row_data.Add(double.Parse(row[i]));
-                    }
-                    catch
-                    {
-                        row_data.Add(0);
-                    }
-                }
-                data.Add(row_data);
-                global::System.Threading.Thread.Sleep(0);
-            }
-
-            return true;
+            return GetColumn(Tags[tag]);
         }
 
+        /// <summary>
+        /// Return number of rows
+        /// </summary>
+        /// <returns>num of rows</returns>
+        public int Rows => Data.Count;
 
+        /// <summary>
+        /// Get number of columns
+        /// </summary>
+        /// <param name="rowIndex">Row index to check.</param>
+        /// <returns>
+        /// The number of columns in the row.
+        /// Number of columns can be different for each rows
+        /// for Jagged array
+        /// </returns>
+        public int Cols(int rowIndex = 0)
+        {
+            if (rowIndex >= Data.Count) return 0;
+            return Data[rowIndex].Length;
+        }
     }
 }
