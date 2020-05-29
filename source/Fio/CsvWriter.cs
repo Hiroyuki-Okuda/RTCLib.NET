@@ -10,7 +10,7 @@ namespace RTCLib.Fio
     /// <summary>
     /// CSVを書き出すクラス．書き出したいメンバだけ登録する．
     /// </summary>
-    /// <typeparam name="BaseType">書き出すデータ型</typeparam>
+    /// <typeparam name="TBaseType">書き出すデータ型</typeparam>
     /// 
     /// // 以下使い方．
     /// <code>
@@ -23,13 +23,14 @@ namespace RTCLib.Fio
     /// 
     /// // 書き出しメンバ登録関数を呼び出し．数が少なければ
     /// // 直接csvインスタンス対してRegField***を呼びだしても良い．
-    /// A.RegisterMember(csv);
+    /// csv.RegField((A o) => o.a, "a");
+    /// A.RegisterMember(csv);  // 構造体と一緒に定義しておくとわかりやすいので
     /// 
     /// // 書き出すためのStreamWriterを準備
-    /// StreamWriter sw = new StreamWriter("file.csv");
+    /// StreamWriter streamWriter = new StreamWriter("file.csv");
     ///
     /// // swにデータを書き出す(リスト中のものをすべてswに書き出す)
-    /// csv.OutputListedData( ref sw, data);
+    /// csv.OutputAllData( ref streamWriter, data);
     ///
     /// // ユーザが個別にデータを書き出す
     /// // StreamWriter等に出す場合に，任意のタイミングでフラッシュしたい場合等
@@ -96,87 +97,92 @@ namespace RTCLib.Fio
     /// }
     /// </code>
 
-    public class CsvWriter<BaseType>
+    public class CsvWriter<TBaseType>
     {
         /// <summary>
-        /// デリミタを設定．通常は","．
+        /// Set delimiter. default is ','．
         /// </summary>
-        public void SetDelimiter(string delim) { _delim = delim;  }
-        
+        public void SetDelimiter(string delimiter) { _delimiter = delimiter;  }
+
 
         /// <summary>
-        /// 通常のメンバ変数を書き出せるように登録
+        /// Register member accessor for embedded type to output 
         /// </summary>
-        public void RegField<T>(Func<BaseType, T> acc, string label)
+        /// <typeparam name="T">Field type</typeparam>
+        /// <param name="accessor">Lambda to access member variable</param>
+        /// <param name="label">Label for member variable</param>
+        public void RegField<T>(Func<TBaseType, T> accessor, string label)
         {
-            acc_list.Add(new CsvAccessor<T>(acc, label));
+            if (string.IsNullOrEmpty(_prefix)) label = _prefix + "." + label;
+            _accList.Add(new CsvAccessor<T>(accessor, label));
         }
 
         /// <summary>
-        /// 配列のメンバ変数を書き出せるように登録
+        /// Register array member for embedded type to output 
         /// </summary>
-        public void RegFieldArray<T>(Func<BaseType, T[]> acc, int count, string label)
+        public void RegFieldArray<T>(Func<TBaseType, T[]> accessor, int count, string label)
         {
-            acc_list.Add(new CsvAccessorArray<T>(acc, count, label));
+            if (string.IsNullOrEmpty(_prefix)) label = _prefix + "." + label;
+            _accList.Add(new CsvAccessorArray<T>(accessor, count, label));
         }
 
         /// <summary>
-        /// クラスor構造体メンバ変数を書き出せるように登録
+        /// Register member for class/struct to output
         /// </summary>
         public void RegFieldClass<T>(
-                Action<CsvWriter<T>> func,
-                Func<BaseType, T> acc,
+                Action<CsvWriter<T>> function,
+                Func<TBaseType, T> accessor,
                 string label = ""
             )
         {
             CsvWriter<T> csv = new CsvWriter<T>();
-            string tmp = CsvWriter<T>.GetPrefix();
-            CsvWriter<T>.SetPrefix(label);
-            func(csv);
-            CsvWriter<T>.SetPrefix(tmp);
+            // string tmp = GetPrefix();
+            csv.SetPrefix(label);
+            function?.Invoke(csv);
+            // csv.SetPrefix(tmp);
 
-            acc_list.Add(new CsvAccessorClass<T>(csv, acc, label));
+            _accList.Add(new CsvAccessorClass<T>(csv, accessor, label));
         }
 
         /// <summary>
-        /// クラスor構造体配列メンバ変数を書き出せるように登録
+        /// Register array member for class/struct to output
         /// </summary>
         public void RegFieldClassArray<T>(
                 Action<CsvWriter<T>> func,
-                Func<BaseType, T[]> acc,
+                Func<TBaseType, T[]> acc,
                 int cnt,
                 string label
             )
         {
             CsvWriter<T>[] csv = new CsvWriter<T>[cnt];
-            for (int i = 0; i < csv.Count(); i++)
+            for (int i = 0; i < csv.Length; i++)
             {
                 csv[i] = new CsvWriter<T>();
                 string tmp = _prefix;//CsvToString<T>.GetPrefix();
-                CsvWriter<T>.SetPrefix( tmp + ConvertNumberedString(label, i) ); 
+                csv[i].SetPrefix( tmp + ConvertNumberedString(label, i) ); 
                 func(csv[i]);
-                CsvWriter<T>.SetPrefix(tmp);
+                // CsvWriter<T>.SetPrefix(tmp);
             }
             
-            acc_list.Add(new CsvAccessorClassArray<T>(csv, acc, cnt, label));
+            _accList.Add(new CsvAccessorClassArray<T>(csv, acc, cnt, label));
         }
 
         /// <summary>
-        /// CSVのヘッダ行をStringBuilderに書き込み
+        /// Output CSV tags as a header to StringBuilder
         /// </summary>
-        /// <param name="sb">書き込み先となるStringBuilder</param>
+        /// <param name="sb">targeting StringBuilder</param>
         public void OutputHeader(ref StringBuilder sb)
         {
-            foreach (var tmp in acc_list)
+            if(sb==null)return;
+            foreach (var tmp in _accList)
             {
                 sb.Append( tmp.GetLabel() );
             }
         }
 
         /// <summary>
-        /// CSVのヘッダ行を文字列として取得
+        /// Get CSV header string
         /// </summary>
-        /// <param name="sb">書き込み先となるStringBuilder</param>
         public string GetHeaderString()
         {
             StringBuilder sb = new StringBuilder();
@@ -185,28 +191,28 @@ namespace RTCLib.Fio
         }
         
         /// <summary>
-        /// Output headers for streamwriter
+        /// Output headers for StreamWriter
         /// </summary>
-        public void OutputHeader()
+        public void OutputHeader(ref StreamWriter streamWriter)
         {
-            sw.WriteLine(GetHeaderString());
+            streamWriter?.WriteLine(GetHeaderString());
         }
 
         /// <summary>
-        /// ターゲットとなるデータに対して一行分だけStringBuilderに出力
+        /// Output target data to StringBuilder as one-line string
         /// </summary>
-        public void OutputOneRowData(ref StringBuilder sb, BaseType trg)
+        public void OutputOneRowData(ref StringBuilder sb, TBaseType trg)
         {
-            foreach (var tmp in acc_list)
+            foreach (var tmp in _accList)
             {
                 tmp.GetString(trg, ref sb);
             }
         }
 
         /// <summary>
-        /// ターゲットとなるデータに対して一行分だけ文字列として取得
+        /// Get a line string of target data
         /// </summary>
-        public string GetOneRowString(BaseType trg)
+        public string GetOneRowString(TBaseType trg)
         {
             StringBuilder sb = new StringBuilder();
             OutputOneRowData(ref sb, trg);
@@ -214,32 +220,24 @@ namespace RTCLib.Fio
         }
 
         /// <summary>
-        /// Output one data row for streamwriter
+        /// Output one data row for StreamWriter
         /// </summary>
-        public void OutputOneRowData(BaseType trg)
+        public void OutputOneRowData(TBaseType trg, ref StreamWriter streamWriter)
         {
-            if (sw != null)
-            {
-                try
-                {
-                    sw.WriteLine(GetOneRowString(trg));
-                    sw.Flush();
-                }
-                catch { 
-
-                }
-            }
+            streamWriter?.WriteLine(GetOneRowString(trg));
+            // streamWriter.Flush();
         }
 
         /// <summary>
-        /// StringBuilderに対してすべての配列orListのものを出力
+        /// Output all data in collection to StringBuilder
         /// </summary>
-        /// <typeparam name="LT">対象データ配列orListの型(BaseTypeのIEnumerable)</typeparam>
-        /// <param name="sb">書き出すStringBuilder</param>
-        /// <param name="lt">データのコレクション</param>
-        public void OutputListedData<ListType>(ref StringBuilder sb, ListType lt)
-            where ListType : IEnumerable<BaseType>
+        /// <typeparam name="TListType">Collection type (with IEnumerable&lt;BaseType&gt;)</typeparam>
+        /// <param name="sb">StringBuilder to output</param>
+        /// <param name="lt">Collection of target data type(TBaseType)</param>
+        public void OutputAllData<TListType>(ref StringBuilder sb, TListType lt)
+            where TListType : IEnumerable<TBaseType>
         {
+            if(sb==null)return;
             OutputHeader(ref sb);
             foreach (var t in lt)
             {
@@ -249,50 +247,42 @@ namespace RTCLib.Fio
         }
 
         /// <summary>
-        /// StreamWriterに対してすべての配列orListのものを出力
+        /// Output all data in collection to StreamWriter
         /// </summary>
-        /// 保存したいファイル名で開いたStreamWriterに対して
-        /// 出力することで，CSVファイルに書き出す．
+        /// Write all data to StreamWriter to make CSV file
         /// 
-        /// <typeparam name="LT">対象データ配列orListの型(BaseTypeのIEnumerable)</typeparam>
-        /// <param name="sb">書き出すStreamWriter</param>
-        /// <param name="lt">データのコレクション</param>
-        public void OutputListedData<ListType>(ref StreamWriter sw, ListType lt)
-            where ListType : IEnumerable<BaseType>
+        /// <typeparam name="TListType">Collection type (with IEnumerable&lt;BaseType&gt;)</typeparam>
+        /// <param name="streamWriter">StreamWriter to output</param>
+        /// <param name="lt">Collection of target data type(TBaseType)</param>
+        public void OutputAllData<TListType>(ref StreamWriter streamWriter, TListType lt)
+            where TListType : IEnumerable<TBaseType>
         {
-            TextWriter tw = (TextWriter)sw;
-            OutputListedData(ref tw, lt);
-        }       
- 
-        /// <summary>
-        /// TextWriterに対してすべての配列orListのものを出力
-        /// </summary>
-        /// 文字列構築したい場合にも対応できるよう，
-        /// TextWriterに対して対応しておく．
-        /// StringWriterを使えば文字列が取得可能．
-        /// 
-        /// <typeparam name="LT">対象データ配列orListの型(BaseTypeのIEnumerable)</typeparam>
-        /// <param name="sb">書き出すStringBuilder</param>
-        /// <param name="lt">データのコレクション</param>
-        public void OutputListedData<ListType>(ref TextWriter tw, ListType lt)
-            where ListType : IEnumerable<BaseType>
-        {
+            if(streamWriter==null)return;
             StringBuilder sb = new StringBuilder();
-            OutputHeader(ref sb);
-            sb.AppendLine();
-
-            foreach (var t in lt)
-            {
-                OutputOneRowData(ref sb, t);
-                tw.WriteLine(sb.ToString());
-                sb.Remove(0, sb.Length);
-            }
-            tw.Flush();
+            OutputAllData(ref sb, lt);
+            streamWriter.Write(sb.ToString());
         }
 
+        /// <summary>
+        /// Output all data in collection to default StreamWriter 
+        /// </summary>
+        /// Write all data to StreamWriter to make CSV file
+        /// 
+        /// <typeparam name="TListType">Collection type (with IEnumerable&lt;BaseType&gt;)</typeparam>
+        /// <param name="lt">Collection of target data type(TBaseType)</param>
+        public void OutputAllData<TListType>(TListType lt)
+            where TListType : IEnumerable<TBaseType>
+        {
+            OutputAllData(ref _streamWriter, lt);
+        }
+
+        /// <summary>
+        /// Set stream to output
+        /// </summary>
+        /// <param name="s"></param>
         public void SetStream(Stream s)
         {
-            sw = new StreamWriter(s);
+            _streamWriter = new StreamWriter(s);
         }
 
         /// <summary>
@@ -300,42 +290,42 @@ namespace RTCLib.Fio
         /// </summary>
         public void OpenFileStream(string fn)
         {
-            sw = new StreamWriter(fn);
+            _streamWriter = new StreamWriter(fn);
         }
 
         public void CloseStream()
         {
-            if (sw!=null)
+            if (_streamWriter!=null)
             {
-                sw.Close();
-                sw.Dispose();
-                sw = null;
+                _streamWriter.Close();
+                _streamWriter.Dispose();
+                _streamWriter = null;
             }
         }
 
 
         /// -------------- 以下内部・非公開部分 ---------------------
 
-        /// アクセス用デリゲート
-        private delegate Tr Accsessor<Tb, Tr>(Tb hoge);
+        /// Accessor delegate
+        private delegate Tr Accessor<Tb, Tr>(Tb hoge);
 
-        /// デリミタ
-        private static string _delim = ",";
+        /// Delimiter to output
+        private string _delimiter = ",";
 
-        /// プレフィックス
-        private static string _prefix = "";
+        /// Prefix
+        private string _prefix = "";
 
-        private static void SetPrefix(string str) { _prefix = str; }
-        private static string GetPrefix() { return _prefix; }
+        private void SetPrefix(string str) { _prefix = str; }
+        private string GetPrefix() { return _prefix; }
 
         /// アクセッサの集合
-        private List<CsvAccsesorBase> acc_list = new List<CsvAccsesorBase>();
+        private List<CsvAccessorBase> _accList = new List<CsvAccessorBase>();
 
         /// ストリームも保持しておきましょう
-        private StreamWriter sw = null;
+        private StreamWriter _streamWriter = null;
 
         /// <summary>
-        /// 数字文字列展開のための関数
+        /// Numbered string from # template
         /// </summary>
         private static string ConvertNumberedString(string template, int i)
         {
@@ -353,113 +343,117 @@ namespace RTCLib.Fio
 
 
         /// <summary>
-        /// 型消去のための基底
+        /// Accessor interface
         /// </summary>
-        private abstract class CsvAccsesorBase
+        /// <remarks>Consider use interface instead of abstract class</remarks>
+        private abstract class CsvAccessorBase
         {
             public abstract string GetLabel();
-            public abstract void GetString(BaseType trg, ref StringBuilder sb);
+            public abstract void GetString(TBaseType trg, ref StringBuilder sb);
         }
 
-        private class CsvAccessor<MemType> : CsvAccsesorBase
+        private class CsvAccessor<TMemType> : CsvAccessorBase
         {
-            public Accsessor<BaseType, MemType> _acc;
-            public string _label;
+            public Accessor<TBaseType, TMemType> Acc;
+            public string Label;
 
             /// <summary>
-            /// コンストラクト時にアクセッサを渡す
+            /// Create an accessor with label
             /// </summary>
-            public CsvAccessor(Func<BaseType, MemType> acc, string label)
+            public CsvAccessor(Func<TBaseType, TMemType> acc, string label)
             {
-                _label = _prefix + label + _delim;
-                _acc = new Accsessor<BaseType, MemType>(acc);
+                Label = label;
+                Acc = new Accessor<TBaseType, TMemType>(acc);
             }
 
-            /// ラベルを返す
+            /// <summary>
+            /// Get label
+            /// </summary>
+            /// <returns></returns>
             public override string GetLabel()
             {
-                return _label;
+                return Label;
             }
 
             /// <summary>
-            /// データを文字列化して渡す
+            /// Get string converted from data
             /// </summary>
-            public override void GetString(BaseType trg, ref StringBuilder sb)
+            public override void GetString(TBaseType trg, ref StringBuilder sb)
             {
-                sb.Append((_acc(trg)).ToString()).Append(_delim);
+                sb.Append((Acc(trg)).ToString()).Append(_delimiter);
                 return;
             }
         }
 
-        private class CsvAccessorArray<MemType> : CsvAccsesorBase
+        private class CsvAccessorArray<TMemType> : CsvAccessorBase
         {
-            public Accsessor<BaseType, MemType[]> _acc;
-            public string _label;
-            public int _cnt;
+            public Accessor<TBaseType, TMemType[]> Acc;
+            public string Label;
+            public int Cnt;
 
             /// <summary>
-            /// コンストラクト時にアクセッサを渡す
+            /// Create accessor for array 
             /// </summary>
-            public CsvAccessorArray(Func<BaseType, MemType[]> acc, int cnt, string label)
+            public CsvAccessorArray(Func<TBaseType, TMemType[]> acc, int cnt, string label)
             {
-                _cnt = cnt;
+                Cnt = cnt;
                 // #が見つからなかった
                 bool f = label.IndexOf("#") == -1;
-                _label = "";
+                Label = "";
                 for (int i = 0; i < cnt; i++)
                 {
                     if (f)
-                        _label += _prefix + label + _delim;
+                        Label += _prefix + ConvertNumberedString(label+"_#", i) + _delimiter;
                     else
-                        _label += _prefix + ConvertNumberedString(label, i) + _delim;
+                        Label += _prefix + ConvertNumberedString(label, i) + _delimiter;
                 }
-                _acc = new Accsessor<BaseType, MemType[]>(acc);
+                Acc = new Accessor<TBaseType, TMemType[]>(acc);
             }
 
-            /// ラベルを返す
+            /// Get label
             public override string GetLabel()
             {
-                return _label;
+                return Label;
             }
             
             /// <summary>
-            /// データを文字列化して渡す
+            /// Get string converted from data
             /// </summary>
-            public override void GetString(BaseType trg, ref StringBuilder sb)
+            public override void GetString(TBaseType trg, ref StringBuilder sb)
             {
-                foreach (MemType tmp in _acc(trg))
+                foreach (var tmp in Acc(trg))
                 {
-                    sb.Append(tmp.ToString()).Append(_delim);
+                    sb.Append(tmp.ToString()).Append(_delimiter);
                 }
                 return;
             }
         }
 
-        private class CsvAccessorClass<MemType> : CsvAccsesorBase
+        private class CsvAccessorClass<TMemType> : CsvAccessorBase
         {
-            public Accsessor<BaseType, MemType> _acc;
-            public string _label;
+            public Accessor<TBaseType, TMemType> Acc;
+            public string Label;
 
-            CsvWriter<MemType> _csv;
+            private readonly CsvWriter<TMemType> _csv;
 
             /// <summary>
-            /// コンストラクト時にアクセッサを渡す
+            /// Create accessor to class/struct data
             /// </summary>
-            public CsvAccessorClass(CsvWriter<MemType> csv, Func<BaseType, MemType> acc, string label="")
+            public CsvAccessorClass(CsvWriter<TMemType> csv, Func<TBaseType, TMemType> acc, string label="")
             {
                 _prefix = _prefix + label;
-                _label = label;
+                Label = label;
                 _csv = csv;
-                _acc = new Accsessor<BaseType, MemType>(acc);
+                Acc = new Accessor<TBaseType, TMemType>(acc);
             }
 
-            /// ラベルを返す
+            /// Get label
             public override string GetLabel()
             {
                 string ret = "";
                 string pref = _prefix;
                 //_prefix = _label;
-                foreach (var tmpmember in _csv.acc_list)
+                foreach (var tmpmember in _csv._accList)
                 {
                     ret += tmpmember.GetLabel();
                 }
@@ -468,41 +462,41 @@ namespace RTCLib.Fio
             }
 
             /// <summary>
-            /// データを文字列化して渡す
+            /// Get string converted from data
             /// </summary>
-            public override void GetString(BaseType trg, ref StringBuilder sb)
+            public override void GetString(TBaseType trg, ref StringBuilder sb)
             {
-                MemType tmp = _acc(trg);
-                foreach( var tmpmember in _csv.acc_list )
+                TMemType tmp = Acc(trg);
+                foreach( var temp in _csv._accList )
                 {
-                    tmpmember.GetString(tmp,ref sb); 
+                    temp.GetString(tmp,ref sb); 
                 }
                 return;
             }
         }
 
-        private class CsvAccessorClassArray<MemType> : CsvAccsesorBase
+        private class CsvAccessorClassArray<TMemType> : CsvAccessorBase
         {
-            public Accsessor<BaseType, MemType[]> _acc;
+            public Accessor<TBaseType, TMemType[]> _acc;
             public string _label;
             public string _n_prefix;
             public int _cnt;
 
-            CsvWriter<MemType>[] _csv;
+            CsvWriter<TMemType>[] _csv;
 
             /// <summary>
-            /// コンストラクト時にアクセッサを渡す
+            /// Create accessor to array of class/struct 
             /// </summary>
-            public CsvAccessorClassArray(CsvWriter<MemType>[] csv, Func<BaseType, MemType[]> acc, int cnt, string label)
+            public CsvAccessorClassArray(CsvWriter<TMemType>[] csv, Func<TBaseType, TMemType[]> acc, int cnt, string label)
             {
                 _cnt = cnt;
                 _n_prefix = _prefix;
                 _label = label;
                 _csv = csv;
-                _acc = new Accsessor<BaseType, MemType[]>(acc);
+                _acc = new Accessor<TBaseType, TMemType[]>(acc);
             }
 
-            /// ラベルを返す
+            /// Get label extending template
             public override string GetLabel()
             {
                 string ret = "";
@@ -511,16 +505,16 @@ namespace RTCLib.Fio
                 bool f = _n_prefix.IndexOf("#") == -1;
                 for (int j = 0; j < _csv.Count(); j++)
                 {
-                    for (int i = 0; i < _csv[j].acc_list.Count; i++)
+                    for (int i = 0; i < _csv[j]._accList.Count; i++)
                     {
                         if (f)
                         {
-                            ret += _csv[j].acc_list[i].GetLabel();
+                            ret += _n_prefix +_csv[j]._accList[i].GetLabel();
                         }
                         else
                         {
                             string pref = ConvertNumberedString(_n_prefix, i);
-                            ret += pref + _csv[j].acc_list[i].GetLabel();
+                            ret += pref + _csv[j]._accList[i].GetLabel();
                         }
                     }
                 }
@@ -528,16 +522,16 @@ namespace RTCLib.Fio
             }
 
             /// <summary>
-            /// データを文字列化して渡す
+            /// Get string converted from data
             /// </summary>
-            public override void GetString(BaseType trg, ref StringBuilder sb)
+            public override void GetString(TBaseType trg, ref StringBuilder sb)
             {
-                MemType[] tmp = _acc(trg);
+                TMemType[] tmp = _acc(trg);
 
                 for (int i = 0; i < _csv.Count(); i++)
                 {
-                    MemType tmpp = _acc(trg)[i];
-                    foreach (var tmpmember in _csv[i].acc_list)
+                    TMemType tmpp = _acc(trg)[i];
+                    foreach (var tmpmember in _csv[i]._accList)
                     {
                         tmpmember.GetString(tmpp, ref sb);
                     }

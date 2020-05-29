@@ -390,21 +390,26 @@
             
             </summary>
         </member>
-        <member name="F:RTCLib.Comm.UdpParameterReceiver.udp">
+        <member name="F:RTCLib.Comm.UdpParameterReceiver.Param">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="F:RTCLib.Comm.UdpParameterReceiver._udp">
             local port
         </member>
-        <member name="F:RTCLib.Comm.UdpParameterReceiver.remoteEP">
+        <member name="F:RTCLib.Comm.UdpParameterReceiver._remoteEp">
             udp client
         </member>
-        <member name="F:RTCLib.Comm.UdpParameterReceiver.receive_buffer">
+        <member name="F:RTCLib.Comm.UdpParameterReceiver._receiveBuffer">
             endpoint
         </member>
-        <member name="F:RTCLib.Comm.UdpParameterReceiver.isAlive">
+        <member name="F:RTCLib.Comm.UdpParameterReceiver.IsAlive">
             <summary>
             async receive is alive
             </summary>
         </member>
-        <member name="F:RTCLib.Comm.UdpParameterReceiver.isTerminating">
+        <member name="F:RTCLib.Comm.UdpParameterReceiver.IsTerminating">
             <summary>
             for termination;
             </summary>
@@ -413,10 +418,18 @@
             <summary>
             Open UDP
             </summary>
-            <param name="remote_host">Remote IP</param>
-            <param name="remote_port">Remote Port</param>
-            <param name="local_port">Sending local port</param>
+            <param name="localPort">Sending local port</param>
             <returns></returns>
+        </member>
+        <member name="M:RTCLib.Comm.UdpParameterReceiver.StartReceiving">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="M:RTCLib.Comm.UdpParameterReceiver.StopReceiving">
+            <summary>
+            
+            </summary>
         </member>
         <member name="T:RTCLib.Comm.UdpParameterSender">
             <summary>
@@ -524,13 +537,24 @@
             </param>
             <param name="encoding">Text encoding</param>
         </member>
-        <member name="M:RTCLib.Fio.CsvReader.OpenImple(System.String,System.Int32,System.Text.Encoding)">
+        <member name="M:RTCLib.Fio.CsvReader.Open(System.IO.StreamReader,System.Int32,System.Text.Encoding)">
+            <summary>
+            Open csv file and read it
+            </summary>
+            <param name="streamReader">text stream to open</param>
+            <param name="numOfHeaderRows">
+            number of header lines. 
+            last line is used as tags of columns
+            </param>
+            <param name="encoding">Text encoding</param>
+            <exception cref="T:System.ArgumentNullException">streamReader is null</exception>
+        </member>
+        <member name="M:RTCLib.Fio.CsvReader.OpenImple(System.IO.StreamReader,System.Int32)">
             <summary>
             Implement of open csv
             </summary>
-            <param name="fileName">filename</param>
+            <param name="sr">stream reader</param>
             <param name="numOfHeaderRows">index of tags line</param>
-            <param name="encoding">Text encoding</param>
         </member>
         <member name="M:RTCLib.Fio.CsvReader.ParseTags(System.String)">
             <summary>
@@ -632,6 +656,136 @@
             <typeparam name="T">target type</typeparam>
             <returns></returns>
             <exception cref="T:System.ArgumentNullException"></exception>
+        </member>
+        <member name="T:RTCLib.Sys.MessageLogger">
+            <summary>
+            Logging class 
+            </summary>
+            
+            Event logging class.
+            
+            Before starting a log,
+            the device should be registered with notification level.
+            All message has also a notification level.
+            
+            The message which has a higher notification level 
+            than the devices' one sent to the device.
+            
+        </member>
+        <member name="T:RTCLib.Sys.MessageLogger.LoggingLevel">
+            <summary>
+            Logging level
+            </summary>
+            If logging level of message is equal or large than
+            device logging level, the message is sent to the device.
+            
+            Lowest(100) &lt; Low(200) &lt; Middle(300) &lt; High(400) &lt; Highest(500)
+            or use int value.
+        </member>
+        <member name="F:RTCLib.Sys.MessageLogger.LoggingLevel.Lowest">
+            <summary>Lowest log level for not important message</summary>
+        </member>
+        <member name="F:RTCLib.Sys.MessageLogger.LoggingLevel.Low">
+            <summary>Lower log level for less important message</summary>
+        </member>
+        <member name="F:RTCLib.Sys.MessageLogger.LoggingLevel.Middle">
+            <summary>Middle log level; base line</summary>
+        </member>
+        <member name="F:RTCLib.Sys.MessageLogger.LoggingLevel.High">
+            <summary>High log level for more important message</summary>
+        </member>
+        <member name="F:RTCLib.Sys.MessageLogger.LoggingLevel.Highest">
+            <summary>Highest log level for the most important message</summary>
+        </member>
+        <member name="T:RTCLib.Sys.MessageLogger.WriteLogDelegate">
+            <summary>
+            Delegate to write the log message to device.
+            </summary>
+            <param name="device">Device object as dynamic</param>
+            <param name="message">Message to write</param>
+            Registered devices are called as:
+            WriteLogDelegate(device, message).
+        </member>
+        <member name="T:RTCLib.Sys.MessageLogger.TerminationDelegate">
+            <summary>
+            Delegate for device termination
+            </summary>
+            <param name="device">Device object as dynamic</param>
+            This delegate is called when the logger is closed.
+            If the device is inheriting IDisposable, Dispose()
+            is also called when MessageLogger is disposed.
+        </member>
+        <member name="T:RTCLib.Sys.MessageLogger.LogDevice">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="F:RTCLib.Sys.MessageLogger._isStopping">
+            <summary>
+            Is going to close logger
+            </summary>
+        </member>
+        <member name="M:RTCLib.Sys.MessageLogger.StartLog(System.Int32)">
+            <summary>
+            Initialization 
+            </summary>
+            <param name="interval">Interval to call </param>
+            This method set the timer to call the procedure
+            to output the log to device.
+            If interval is negative, user have to call
+            ProcessMessage() manually to output the log.
+        </member>
+        <member name="M:RTCLib.Sys.MessageLogger.Terminate">
+            <summary>
+            Terminate logger system
+            </summary>
+        </member>
+        <member name="M:RTCLib.Sys.MessageLogger.WaitForLogComplete">
+            <summary>
+            Wait until all messages are processed.
+            </summary>
+        </member>
+        <member name="M:RTCLib.Sys.MessageLogger.TimerCallback(System.Object,System.Timers.ElapsedEventArgs)">
+            <summary>
+            Executed in other thread
+            </summary>
+        </member>
+        <member name="M:RTCLib.Sys.MessageLogger.ProcessMessage">
+            <summary>
+            Process message
+            </summary>
+            Output queued messages to the device
+        </member>
+        <member name="M:RTCLib.Sys.MessageLogger.AddLogDevice(RTCLib.Sys.MessageLogger.LoggingLevel,System.Object,RTCLib.Sys.MessageLogger.WriteLogDelegate,RTCLib.Sys.MessageLogger.TerminationDelegate)">
+             <summary>
+             Add logging device class
+             </summary>
+             <param name="level">Logging level</param>
+             <param name="dev">Device class as dynamic</param>
+             <param name="writeDelegate">Delegate to write message to the device</param>
+             <param name="termDelegate">Delegate to terminate the device</param>
+            
+             Set lower log level if you want to log less important messages.
+             Set higher log level for digest to log only important messages.
+            
+             Terminanation delegate is called when the logger is terminated.
+        </member>
+        <member name="M:RTCLib.Sys.MessageLogger.AddLog(System.String,RTCLib.Sys.MessageLogger.LoggingLevel)">
+            <summary>
+            Add the log message
+            </summary>
+            <param name="msg">Message to log</param>
+            <param name="level">Logging levels of message</param>
+            level 0 : show anyway
+            level n : show message if n if g.e. than levels of device
+        </member>
+        <member name="M:RTCLib.Sys.MessageLogger.Finalize">
+            <inheritdoc />
+        </member>
+        <member name="M:RTCLib.Sys.MessageLogger.Dispose">
+            <summary>
+            Dispose unmanaged/managed resources
+            </summary>
         </member>
     </members>
 </doc>

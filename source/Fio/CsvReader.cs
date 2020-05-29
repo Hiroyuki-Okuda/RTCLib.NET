@@ -98,7 +98,12 @@ namespace RTCLib.Fio
             ClearData();
             try
             {
-                OpenImple(fileName, numOfHeaderRows, encoding);
+                global::System.IO.FileStream fs = new FileStream(fileName, FileMode.Open);
+
+                // open file as stream
+                //StreamReader sr = new StreamReader(fileName, Encoding.ASCII);
+                using StreamReader sr = encoding==null ? new StreamReader(fs) : new StreamReader(fs, encoding);
+                OpenImple(sr, numOfHeaderRows);
             }
             catch (FormatException o)
             {
@@ -107,20 +112,38 @@ namespace RTCLib.Fio
         }
 
         /// <summary>
+        /// Open csv file and read it
+        /// </summary>
+        /// <param name="streamReader">text stream to open</param>
+        /// <param name="numOfHeaderRows">
+        /// number of header lines. 
+        /// last line is used as tags of columns
+        /// </param>
+        /// <param name="encoding">Text encoding</param>
+        /// <exception cref="ArgumentNullException">streamReader is null</exception>
+        public void Open(StreamReader streamReader, int numOfHeaderRows = 0, System.Text.Encoding encoding = null)
+        {
+            ClearData();
+            try
+            {
+                if (streamReader == null) throw new ArgumentNullException(paramName: nameof(streamReader) + " is null");
+                OpenImple(streamReader, numOfHeaderRows);
+            }
+            catch (FormatException o)
+            {
+                Debug.WriteLine("CSV format error");
+            }
+        }
+
+        /// <summary>
         /// Implement of open csv
         /// </summary>
-        /// <param name="fileName">filename</param>
+        /// <param name="sr">stream reader</param>
         /// <param name="numOfHeaderRows">index of tags line</param>
-        /// <param name="encoding">Text encoding</param>
-        private void OpenImple(string fileName, int numOfHeaderRows, System.Text.Encoding encoding)
+        private void OpenImple(StreamReader sr, int numOfHeaderRows)
         {
-            global::System.IO.FileStream fs = new FileStream(fileName, FileMode.Open);
 
-            // open file as stream
-            //StreamReader sr = new StreamReader(fileName, Encoding.ASCII);
-            using StreamReader sr = encoding==null ? new StreamReader(fs) : new StreamReader(fs, encoding);
-
-            double length = fs.Length;
+            double length = sr.BaseStream.Length;
 
             int readLine = 0;   //! Read complete lines 
             int skipping = SkipLine;
@@ -140,7 +163,7 @@ namespace RTCLib.Fio
                     if (readLine == numOfHeaderRows)
                     {
                         ParseTags(str);
-                        continue;
+                        break;
                     }
                 }
             }
