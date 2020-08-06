@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 
 using System.IO;
+using System.Reflection.Emit;
 
 namespace RTCLib.Fio
 {
@@ -110,11 +111,11 @@ namespace RTCLib.Fio
         /// </summary>
         /// <typeparam name="T">Field type</typeparam>
         /// <param name="accessor">Lambda to access member variable</param>
-        /// <param name="label">Label for member variable</param>
+        /// <param name="label">_label for member variable</param>
         public void RegField<T>(Func<TBaseType, T> accessor, string label)
         {
-            if (string.IsNullOrEmpty(_prefix)) label = _prefix + "." + label;
-            _accList.Add(new CsvAccessor<T>(accessor, label));
+            // if (string.IsNullOrEmpty(_prefix)) label = _prefix + "." + label;
+            _accList.Add(new CsvAccessor<T>(this, accessor, label));
         }
 
         /// <summary>
@@ -122,34 +123,35 @@ namespace RTCLib.Fio
         /// </summary>
         public void RegFieldArray<T>(Func<TBaseType, T[]> accessor, int count, string label)
         {
-            if (string.IsNullOrEmpty(_prefix)) label = _prefix + "." + label;
-            _accList.Add(new CsvAccessorArray<T>(accessor, count, label));
+            // if (string.IsNullOrEmpty(_prefix)) label = _prefix + "." + label;
+            _accList.Add(new CsvAccessorArray<T>(this, accessor, count, label));
         }
 
         /// <summary>
         /// Register member for class/struct to output
         /// </summary>
         public void RegFieldClass<T>(
-                Action<CsvWriter<T>> function,
+                Action<CsvWriter<T>> register,
                 Func<TBaseType, T> accessor,
-                string label = ""
+                string label
             )
         {
             CsvWriter<T> csv = new CsvWriter<T>();
             // string tmp = GetPrefix();
-            csv.SetPrefix(label);
-            function?.Invoke(csv);
+            // csv.PushPrefix(label);
+            csv.PushPrefix(label);
+            register?.Invoke(csv);
             // csv.SetPrefix(tmp);
 
-            _accList.Add(new CsvAccessorClass<T>(csv, accessor, label));
+            _accList.Add(new CsvAccessorClass<T>(this, csv, accessor, label));
         }
 
         /// <summary>
         /// Register array member for class/struct to output
         /// </summary>
         public void RegFieldClassArray<T>(
-                Action<CsvWriter<T>> func,
-                Func<TBaseType, T[]> acc,
+                Action<CsvWriter<T>> register,
+                Func<TBaseType, T[]> accessor,
                 int cnt,
                 string label
             )
@@ -158,13 +160,14 @@ namespace RTCLib.Fio
             for (int i = 0; i < csv.Length; i++)
             {
                 csv[i] = new CsvWriter<T>();
-                string tmp = _prefix;//CsvToString<T>.GetPrefix();
-                csv[i].SetPrefix( tmp + ConvertNumberedString(label, i) ); 
-                func(csv[i]);
+                // string tmp = _prefix;//CsvToString<T>.GetPrefix();
+                // csv[i].SetPrefix( tmp + ConvertNumberedString(label, i) ); 
+                csv[i].PushPrefix( ConvertNumberedString(label,i));
+                register(csv[i]);
                 // CsvWriter<T>.SetPrefix(tmp);
             }
             
-            _accList.Add(new CsvAccessorClassArray<T>(csv, acc, cnt, label));
+            _accList.Add(new CsvAccessorClassArray<T>(this, csv, accessor, cnt, label));
         }
 
         /// <summary>
@@ -176,7 +179,7 @@ namespace RTCLib.Fio
             if(sb==null)return;
             foreach (var tmp in _accList)
             {
-                sb.Append( tmp.GetLabel() );
+                sb.Append( tmp.GetLabel() + "," );
             }
         }
 
@@ -187,7 +190,9 @@ namespace RTCLib.Fio
         {
             StringBuilder sb = new StringBuilder();
             OutputHeader(ref sb);
-            return sb.ToString();
+            string ret = sb.ToString();
+            if (ret.Last() == ',') ret = ret.TrimEnd(',');
+            return ret;
         }
         
         /// <summary>
@@ -205,7 +210,7 @@ namespace RTCLib.Fio
         {
             foreach (var tmp in _accList)
             {
-                tmp.GetString(trg, ref sb);
+                tmp.GetString(trg, ref sb, _delimiter);
             }
         }
 
@@ -216,7 +221,9 @@ namespace RTCLib.Fio
         {
             StringBuilder sb = new StringBuilder();
             OutputOneRowData(ref sb, trg);
-            return sb.ToString();
+            string ret = sb.ToString();
+            ret = ret.TrimEnd(',');
+            return ret;
         }
 
         /// <summary>
@@ -313,10 +320,13 @@ namespace RTCLib.Fio
         private string _delimiter = ",";
 
         /// Prefix
-        private string _prefix = "";
+        private Stack<string> _prefix = new Stack<string>();
 
-        private void SetPrefix(string str) { _prefix = str; }
-        private string GetPrefix() { return _prefix; }
+        private void PushPrefix(string str) { _prefix.Push(str); }
+        private void PopPrefix(){_prefix.Pop();}
+
+        private string GetPrefix() { return string.Join('.', _prefix); }
+
 
         /// アクセッサの集合
         private List<CsvAccessorBase> _accList = new List<CsvAccessorBase>();
@@ -327,7 +337,7 @@ namespace RTCLib.Fio
         /// <summary>
         /// Numbered string from # template
         /// </summary>
-        private static string ConvertNumberedString(string template, int i)
+        private string ConvertNumberedString(string template, int i)
         {
             global::System.Text.RegularExpressions.Regex r =
                 new global::System.Text.RegularExpressions.Regex(@"#+");
@@ -335,12 +345,23 @@ namespace RTCLib.Fio
 
             if (m.Length == 0) return template;
 
-            string num_str_fmt = m.Value.Replace("#", "0");
-            string num_str = i.ToString(num_str_fmt);
-            return template.Replace(m.Value, num_str);
+            string numStrFmt = m.Value.Replace("#", "0");
+            string numStr = i.ToString(numStrFmt);
+            return template.Replace(m.Value, numStr);
         }
 
-
+        /// <summary>
+        /// Numbered string from # template
+        /// </summary>
+        private IEnumerable<string> ExtendNumberedString(string template, int count)
+        {
+            List<string> conv = new List<string>();
+            for (int i = 0; i < count; i++)
+            {
+                conv.Add(ConvertNumberedString(template, i) );
+            }
+            return conv;
+        }
 
         /// <summary>
         /// Accessor interface
@@ -348,21 +369,34 @@ namespace RTCLib.Fio
         /// <remarks>Consider use interface instead of abstract class</remarks>
         private abstract class CsvAccessorBase
         {
+            protected readonly CsvWriter<TBaseType> _writer;
+            // protected string _prefix;
+            protected string _label;
             public abstract string GetLabel();
-            public abstract void GetString(TBaseType trg, ref StringBuilder sb);
+            public abstract void GetString(TBaseType trg, ref StringBuilder sb, string delimiter);
+
+            public string GetPrefix()
+            {
+                return _writer._prefix.Count == 0 ? "" : string.Join(_writer._delimiter, _writer._prefix)+".";
+            }
+
+            protected CsvAccessorBase(CsvWriter<TBaseType> writer, string label)
+            {
+                _writer = writer;
+                _label = label;
+            }
         }
 
         private class CsvAccessor<TMemType> : CsvAccessorBase
         {
             public Accessor<TBaseType, TMemType> Acc;
-            public string Label;
 
             /// <summary>
             /// Create an accessor with label
             /// </summary>
-            public CsvAccessor(Func<TBaseType, TMemType> acc, string label)
+            public CsvAccessor(CsvWriter<TBaseType> writer, Func<TBaseType, TMemType> acc, string label)
+                : base(writer,label)
             {
-                Label = label;
                 Acc = new Accessor<TBaseType, TMemType>(acc);
             }
 
@@ -372,15 +406,15 @@ namespace RTCLib.Fio
             /// <returns></returns>
             public override string GetLabel()
             {
-                return Label;
+                return GetPrefix() + _label;
             }
 
             /// <summary>
             /// Get string converted from data
             /// </summary>
-            public override void GetString(TBaseType trg, ref StringBuilder sb)
+            public override void GetString(TBaseType trg, ref StringBuilder sb, string delimiter)
             {
-                sb.Append((Acc(trg)).ToString()).Append(_delimiter);
+                sb.Append((Acc(trg)).ToString()).Append(delimiter);
                 return;
             }
         }
@@ -388,42 +422,38 @@ namespace RTCLib.Fio
         private class CsvAccessorArray<TMemType> : CsvAccessorBase
         {
             public Accessor<TBaseType, TMemType[]> Acc;
-            public string Label;
             public int Cnt;
 
             /// <summary>
             /// Create accessor for array 
             /// </summary>
-            public CsvAccessorArray(Func<TBaseType, TMemType[]> acc, int cnt, string label)
+            public CsvAccessorArray(CsvWriter<TBaseType> writer, Func<TBaseType, TMemType[]> acc, int cnt, string label)
+                : base(writer, label)
             {
                 Cnt = cnt;
                 // #が見つからなかった
                 bool f = label.IndexOf("#") == -1;
-                Label = "";
-                for (int i = 0; i < cnt; i++)
-                {
-                    if (f)
-                        Label += _prefix + ConvertNumberedString(label+"_#", i) + _delimiter;
-                    else
-                        Label += _prefix + ConvertNumberedString(label, i) + _delimiter;
-                }
+                if (f)
+                    _label = label + "_#";
+                else
+                    _label = label;
                 Acc = new Accessor<TBaseType, TMemType[]>(acc);
             }
 
             /// Get label
             public override string GetLabel()
             {
-                return Label;
+                return string.Join(_writer._delimiter, _writer.ExtendNumberedString(_label, Cnt).Select(o=>GetPrefix()+o));
             }
             
             /// <summary>
             /// Get string converted from data
             /// </summary>
-            public override void GetString(TBaseType trg, ref StringBuilder sb)
+            public override void GetString(TBaseType trg, ref StringBuilder sb, string delimiter)
             {
                 foreach (var tmp in Acc(trg))
                 {
-                    sb.Append(tmp.ToString()).Append(_delimiter);
+                    sb.Append(tmp.ToString()).Append(delimiter);
                 }
                 return;
             }
@@ -432,17 +462,15 @@ namespace RTCLib.Fio
         private class CsvAccessorClass<TMemType> : CsvAccessorBase
         {
             public Accessor<TBaseType, TMemType> Acc;
-            public string Label;
 
             private readonly CsvWriter<TMemType> _csv;
 
             /// <summary>
             /// Create accessor to class/struct data
             /// </summary>
-            public CsvAccessorClass(CsvWriter<TMemType> csv, Func<TBaseType, TMemType> acc, string label="")
+            public CsvAccessorClass(CsvWriter<TBaseType> writer, CsvWriter<TMemType> csv, Func<TBaseType, TMemType> acc, string label="")
+                : base(writer, label)
             {
-                _prefix = _prefix + label;
-                Label = label;
                 _csv = csv;
                 Acc = new Accessor<TBaseType, TMemType>(acc);
             }
@@ -450,26 +478,21 @@ namespace RTCLib.Fio
             /// Get label
             public override string GetLabel()
             {
-                string ret = "";
-                string pref = _prefix;
-                //_prefix = _label;
-                foreach (var tmpmember in _csv._accList)
-                {
-                    ret += tmpmember.GetLabel();
-                }
-                _prefix = pref;
+                //_csv.PushPrefix(Label);
+                string ret = _csv.GetHeaderString();
+                //_csv.PopPrefix();
                 return ret;
             }
 
             /// <summary>
             /// Get string converted from data
             /// </summary>
-            public override void GetString(TBaseType trg, ref StringBuilder sb)
+            public override void GetString(TBaseType trg, ref StringBuilder sb, string delimiter)
             {
                 TMemType tmp = Acc(trg);
                 foreach( var temp in _csv._accList )
                 {
-                    temp.GetString(tmp,ref sb); 
+                    temp.GetString(tmp,ref sb, delimiter); 
                 }
                 return;
             }
@@ -478,8 +501,6 @@ namespace RTCLib.Fio
         private class CsvAccessorClassArray<TMemType> : CsvAccessorBase
         {
             public Accessor<TBaseType, TMemType[]> _acc;
-            public string _label;
-            public string _n_prefix;
             public int _cnt;
 
             CsvWriter<TMemType>[] _csv;
@@ -487,11 +508,10 @@ namespace RTCLib.Fio
             /// <summary>
             /// Create accessor to array of class/struct 
             /// </summary>
-            public CsvAccessorClassArray(CsvWriter<TMemType>[] csv, Func<TBaseType, TMemType[]> acc, int cnt, string label)
+            public CsvAccessorClassArray(CsvWriter<TBaseType> writer, CsvWriter<TMemType>[] csv, Func<TBaseType, TMemType[]> acc, int cnt, string label)
+                : base(writer, label)
             {
                 _cnt = cnt;
-                _n_prefix = _prefix;
-                _label = label;
                 _csv = csv;
                 _acc = new Accessor<TBaseType, TMemType[]>(acc);
             }
@@ -499,32 +519,23 @@ namespace RTCLib.Fio
             /// Get label extending template
             public override string GetLabel()
             {
-                string ret = "";
+                List<string> conv = new List<string>();
 
                 // #が見つからなかった
-                bool f = _n_prefix.IndexOf("#") == -1;
-                for (int j = 0; j < _csv.Count(); j++)
+                for (int i = 0; i < _csv.Length; i++)
                 {
-                    for (int i = 0; i < _csv[j]._accList.Count; i++)
-                    {
-                        if (f)
-                        {
-                            ret += _n_prefix +_csv[j]._accList[i].GetLabel();
-                        }
-                        else
-                        {
-                            string pref = ConvertNumberedString(_n_prefix, i);
-                            ret += pref + _csv[j]._accList[i].GetLabel();
-                        }
-                    }
+                    string lbl = _writer.ConvertNumberedString( GetPrefix() + _label, i);
+                    //_csv[i].PushPrefix(lbl);
+                    conv.Add(_csv[i].GetHeaderString());
+                    //_csv[i].PopPrefix();
                 }
-                return ret;
+                return String.Join(_writer._delimiter, conv);
             }
 
             /// <summary>
             /// Get string converted from data
             /// </summary>
-            public override void GetString(TBaseType trg, ref StringBuilder sb)
+            public override void GetString(TBaseType trg, ref StringBuilder sb, string delimiter)
             {
                 TMemType[] tmp = _acc(trg);
 
@@ -533,7 +544,7 @@ namespace RTCLib.Fio
                     TMemType tmpp = _acc(trg)[i];
                     foreach (var tmpmember in _csv[i]._accList)
                     {
-                        tmpmember.GetString(tmpp, ref sb);
+                        tmpmember.GetString(tmpp, ref sb, delimiter);
                     }
                 }
                 return;

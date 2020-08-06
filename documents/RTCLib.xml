@@ -635,6 +635,191 @@
             for Jagged array
             </returns>
         </member>
+        <!-- Badly formed XML comment ignored for member "T:RTCLib.Fio.CsvWriter`1" -->
+        <member name="M:RTCLib.Fio.CsvWriter`1.SetDelimiter(System.String)">
+            <summary>
+            Set delimiter. default is ','．
+            </summary>
+        </member>
+        <member name="M:RTCLib.Fio.CsvWriter`1.RegField``1(System.Func{`0,``0},System.String)">
+            <summary>
+            Register member accessor for embedded type to output 
+            </summary>
+            <typeparam name="T">Field type</typeparam>
+            <param name="accessor">Lambda to access member variable</param>
+            <param name="label">_label for member variable</param>
+        </member>
+        <member name="M:RTCLib.Fio.CsvWriter`1.RegFieldArray``1(System.Func{`0,``0[]},System.Int32,System.String)">
+            <summary>
+            Register array member for embedded type to output 
+            </summary>
+        </member>
+        <member name="M:RTCLib.Fio.CsvWriter`1.RegFieldClass``1(System.Action{RTCLib.Fio.CsvWriter{``0}},System.Func{`0,``0},System.String)">
+            <summary>
+            Register member for class/struct to output
+            </summary>
+        </member>
+        <member name="M:RTCLib.Fio.CsvWriter`1.RegFieldClassArray``1(System.Action{RTCLib.Fio.CsvWriter{``0}},System.Func{`0,``0[]},System.Int32,System.String)">
+            <summary>
+            Register array member for class/struct to output
+            </summary>
+        </member>
+        <member name="M:RTCLib.Fio.CsvWriter`1.OutputHeader(System.Text.StringBuilder@)">
+            <summary>
+            Output CSV tags as a header to StringBuilder
+            </summary>
+            <param name="sb">targeting StringBuilder</param>
+        </member>
+        <member name="M:RTCLib.Fio.CsvWriter`1.GetHeaderString">
+            <summary>
+            Get CSV header string
+            </summary>
+        </member>
+        <member name="M:RTCLib.Fio.CsvWriter`1.OutputHeader(System.IO.StreamWriter@)">
+            <summary>
+            Output headers for StreamWriter
+            </summary>
+        </member>
+        <member name="M:RTCLib.Fio.CsvWriter`1.OutputOneRowData(System.Text.StringBuilder@,`0)">
+            <summary>
+            Output target data to StringBuilder as one-line string
+            </summary>
+        </member>
+        <member name="M:RTCLib.Fio.CsvWriter`1.GetOneRowString(`0)">
+            <summary>
+            Get a line string of target data
+            </summary>
+        </member>
+        <member name="M:RTCLib.Fio.CsvWriter`1.OutputOneRowData(`0,System.IO.StreamWriter@)">
+            <summary>
+            Output one data row for StreamWriter
+            </summary>
+        </member>
+        <member name="M:RTCLib.Fio.CsvWriter`1.OutputAllData``1(System.Text.StringBuilder@,``0)">
+            <summary>
+            Output all data in collection to StringBuilder
+            </summary>
+            <typeparam name="TListType">Collection type (with IEnumerable&lt;BaseType&gt;)</typeparam>
+            <param name="sb">StringBuilder to output</param>
+            <param name="lt">Collection of target data type(TBaseType)</param>
+        </member>
+        <member name="M:RTCLib.Fio.CsvWriter`1.OutputAllData``1(System.IO.StreamWriter@,``0)">
+            <summary>
+            Output all data in collection to StreamWriter
+            </summary>
+            Write all data to StreamWriter to make CSV file
+            
+            <typeparam name="TListType">Collection type (with IEnumerable&lt;BaseType&gt;)</typeparam>
+            <param name="streamWriter">StreamWriter to output</param>
+            <param name="lt">Collection of target data type(TBaseType)</param>
+        </member>
+        <member name="M:RTCLib.Fio.CsvWriter`1.OutputAllData``1(``0)">
+            <summary>
+            Output all data in collection to default StreamWriter 
+            </summary>
+            Write all data to StreamWriter to make CSV file
+            
+            <typeparam name="TListType">Collection type (with IEnumerable&lt;BaseType&gt;)</typeparam>
+            <param name="lt">Collection of target data type(TBaseType)</param>
+        </member>
+        <member name="M:RTCLib.Fio.CsvWriter`1.SetStream(System.IO.Stream)">
+            <summary>
+            Set stream to output
+            </summary>
+            <param name="s"></param>
+        </member>
+        <member name="M:RTCLib.Fio.CsvWriter`1.OpenFileStream(System.String)">
+            <summary>
+            Open output stream 
+            </summary>
+        </member>
+        <member name="T:RTCLib.Fio.CsvWriter`1.Accessor`2">
+            -------------- 以下内部・非公開部分 ---------------------
+            Accessor delegate
+        </member>
+        <member name="F:RTCLib.Fio.CsvWriter`1._delimiter">
+            Delimiter to output
+        </member>
+        <member name="F:RTCLib.Fio.CsvWriter`1._prefix">
+            Prefix
+        </member>
+        <member name="F:RTCLib.Fio.CsvWriter`1._accList">
+            アクセッサの集合
+        </member>
+        <member name="F:RTCLib.Fio.CsvWriter`1._streamWriter">
+            ストリームも保持しておきましょう
+        </member>
+        <member name="M:RTCLib.Fio.CsvWriter`1.ConvertNumberedString(System.String,System.Int32)">
+            <summary>
+            Numbered string from # template
+            </summary>
+        </member>
+        <member name="M:RTCLib.Fio.CsvWriter`1.ExtendNumberedString(System.String,System.Int32)">
+            <summary>
+            Numbered string from # template
+            </summary>
+        </member>
+        <member name="T:RTCLib.Fio.CsvWriter`1.CsvAccessorBase">
+            <summary>
+            Accessor interface
+            </summary>
+            <remarks>Consider use interface instead of abstract class</remarks>
+        </member>
+        <member name="M:RTCLib.Fio.CsvWriter`1.CsvAccessor`1.#ctor(RTCLib.Fio.CsvWriter{`0},System.Func{`0,`1},System.String)">
+            <summary>
+            Create an accessor with label
+            </summary>
+        </member>
+        <member name="M:RTCLib.Fio.CsvWriter`1.CsvAccessor`1.GetLabel">
+            <summary>
+            Get label
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:RTCLib.Fio.CsvWriter`1.CsvAccessor`1.GetString(`0,System.Text.StringBuilder@,System.String)">
+            <summary>
+            Get string converted from data
+            </summary>
+        </member>
+        <member name="M:RTCLib.Fio.CsvWriter`1.CsvAccessorArray`1.#ctor(RTCLib.Fio.CsvWriter{`0},System.Func{`0,`1[]},System.Int32,System.String)">
+            <summary>
+            Create accessor for array 
+            </summary>
+        </member>
+        <member name="M:RTCLib.Fio.CsvWriter`1.CsvAccessorArray`1.GetLabel">
+            Get label
+        </member>
+        <member name="M:RTCLib.Fio.CsvWriter`1.CsvAccessorArray`1.GetString(`0,System.Text.StringBuilder@,System.String)">
+            <summary>
+            Get string converted from data
+            </summary>
+        </member>
+        <member name="M:RTCLib.Fio.CsvWriter`1.CsvAccessorClass`1.#ctor(RTCLib.Fio.CsvWriter{`0},RTCLib.Fio.CsvWriter{`1},System.Func{`0,`1},System.String)">
+            <summary>
+            Create accessor to class/struct data
+            </summary>
+        </member>
+        <member name="M:RTCLib.Fio.CsvWriter`1.CsvAccessorClass`1.GetLabel">
+            Get label
+        </member>
+        <member name="M:RTCLib.Fio.CsvWriter`1.CsvAccessorClass`1.GetString(`0,System.Text.StringBuilder@,System.String)">
+            <summary>
+            Get string converted from data
+            </summary>
+        </member>
+        <member name="M:RTCLib.Fio.CsvWriter`1.CsvAccessorClassArray`1.#ctor(RTCLib.Fio.CsvWriter{`0},RTCLib.Fio.CsvWriter{`1}[],System.Func{`0,`1[]},System.Int32,System.String)">
+            <summary>
+            Create accessor to array of class/struct 
+            </summary>
+        </member>
+        <member name="M:RTCLib.Fio.CsvWriter`1.CsvAccessorClassArray`1.GetLabel">
+            Get label extending template
+        </member>
+        <member name="M:RTCLib.Fio.CsvWriter`1.CsvAccessorClassArray`1.GetString(`0,System.Text.StringBuilder@,System.String)">
+            <summary>
+            Get string converted from data
+            </summary>
+        </member>
         <member name="T:RTCLib.Sys.Interop">
             <summary>
             Marshaling utilities
